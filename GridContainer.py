@@ -72,6 +72,9 @@ class GridContainer(object):
     def set_flag(self, grid):
         if len(self._flag_grid) == self._mine_count:
             return
+        if grid.get_is_flag():
+            return
+
         grid.set_is_flag(True)
         self._flag_grid.append(grid)
 
