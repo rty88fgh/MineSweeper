@@ -1,8 +1,10 @@
+import copy
 import random
 
 from Grid import Grid
 from GridContainer import GridContainer
 from Player import Player
+from Rule import Rule
 from View import View, PlayerAction
 
 
@@ -17,6 +19,7 @@ class Game(object):
         self._view = None
         self._state = GameState.WaitingPlayer
         self._current_player_index = 0
+        self._rule = Rule()
 
     def join(self, player):
         self._players.append(player)
@@ -27,8 +30,7 @@ class Game(object):
         self.init_game()
         self._view.draw_player_get_score(self._players[self._current_player_index], 0)
         while not self._state == GameState.EndGame:
-            action, click_grid = self._view.get_player_click()
-            score = 0
+            action, click_grid = self._view.get_player_action_and_grid()
             if action == PlayerAction.Quit:
                 self._view.end_game()
                 self._state = GameState.EndGame
@@ -56,11 +58,13 @@ class Game(object):
         self._current_player_index = 0
 
     def player_click_or_set_flag(self, action, click_grid):
-        score = 0
+        touch_grids = None
         if action == PlayerAction.ClickGrid:
-            score = self._container.reveal_grid(click_grid)
+            touch_grids = self._container.reveal_grid_and_get_touch_grids(click_grid)
         elif action == PlayerAction.Flag:
-            score = self._container.set_flag(click_grid)
+            touch_grids = self._container.set_flag_get_touch_grid(click_grid)
+
+        score = Rule.calculate_score(touch_grids, action == PlayerAction.ClickGrid)
 
         if score == 0:
             return
@@ -68,8 +72,9 @@ class Game(object):
         self.add_player_score(score)
         self.adjust_player_sequence()
 
-        if self._container.check_all_flag_clicked():
-            self._view.draw_win()
+        if self._container.is_win():
+            order_players = [copy.copy(p) for p in self._players].sort(lambda player: player.get_score()).reverse()
+            self._view.draw_win(order_players[0])
             self._state = GameState.WaitingReplay
 
     def add_player_score(self, score):

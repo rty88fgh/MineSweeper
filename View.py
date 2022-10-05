@@ -8,7 +8,7 @@ class View(object):
     border = 16  # Top border
     top_border = 100  # Left, Right, Bottom border
     score_width = 200
-    score_font_size = 20
+    font_size = 20
     empty = pygame.image.load("Sprites/empty.png")
     flag = pygame.image.load("Sprites/flag.png")
     grid = pygame.image.load("Sprites/Grid.png")
@@ -42,18 +42,19 @@ class View(object):
 
     def refresh_view(self, grids, players):
         self._display.fill(View.bg_color)
-        for row in grids:
-            for g in row:
-                self.draw_grid(g)
+        # select many to one list
+        all_grids = sum(grids, [])
+        for g in all_grids:
+            self.draw_grid(g)
         # smile
         self._display.blit(View.smile, self._smile_rect)
         i = 0
         for player in players:
             player_text = "{0} - ({1})".format(player.get_name(), player.get_score())
-            player_render = pygame.font.SysFont("Calibri", View.score_font_size).render(player_text, True, (0, 0, 0))
+            player_render = pygame.font.SysFont("Calibri", View.font_size).render(player_text, True, (0, 0, 0))
             self._display.blit(player_render,
                                (self._display_width - View.border - View.score_width,
-                                View.border + i * View.score_font_size))
+                                View.border + i * View.font_size))
             i += 1
 
         pygame.display.update()
@@ -99,14 +100,14 @@ class View(object):
 
     def draw_player_get_score(self, player, score):
         player_text = "player: " + player.get_name()
-        player_render = pygame.font.SysFont("Calibri", 20).render(player_text, True, (0, 0, 0))
+        player_render = pygame.font.SysFont("Calibri", View.font_size).render(player_text, True, (0, 0, 0))
         self._display.blit(player_render, (View.border, View.border))
         score_text = ("+ " if score >= 0 else "- ") + str(abs(score))
-        score_render = pygame.font.SysFont("Calibri", 20).render(score_text, True, (0, 0, 0))
+        score_render = pygame.font.SysFont("Calibri", View.font_size).render(score_text, True, (0, 0, 0))
         self._display.blit(score_render, (View.border, View.border + 20))
         pygame.display.update()
 
-    def get_player_click(self):
+    def get_player_action_and_grid(self):
         while True:
             try:
                 for event in pygame.event.get():
@@ -131,8 +132,15 @@ class View(object):
             if rect.collidepoint(event.pos):
                 return grid
 
-    def draw_win(self):
+    def draw_win(self, win_player_name):
         self._display.blit(View.win, self._smile_rect)  # smile change to game over
+        win_str = "{} Win!!!".format(win_player_name)
+        win_render = pygame.font.SysFont("Calibri", View.font_size).render(win_str, True, (0, 0, 0))
+        win_rect = win_render.get_rect()
+        win_rect.center = ((self._display_width - View.border - View.score_width) / 2,
+                           View.border + self._smile_rect.height + View.font_size / 2)
+        self._display.blit(win_render, win_rect)
+        self._display.blit(win_render, (View.border, View.border))
         pygame.display.update()
 
     def end_game(self):

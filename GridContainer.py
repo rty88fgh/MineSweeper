@@ -3,17 +3,6 @@ import random
 from Grid import Grid
 
 
-class GameScore(object):
-    FlagCorrect = "FlagCorrect"
-    FlagError = "FlagError"
-    ClickMine = "MineError"
-    ScoreMap = {
-        FlagCorrect: 50,
-        FlagError: -75,
-        ClickMine: -250
-    }
-
-
 class GridContainer(object):
     def __init__(self, width, height, mine_count):
         self._grids = []
@@ -58,36 +47,34 @@ class GridContainer(object):
 
         return grids
 
-    def reveal_grid(self, grid):
+    def reveal_grid_and_get_touch_grids(self, grid):
         if grid.get_is_clicked():
-            return 0
-
+            return []
+        touch_grids = []
         grid.set_is_clicked(True)
         if grid.get_is_flag():
             grid.set_is_flag(False)
 
         if grid.get_is_mine():
             grid.set_is_mine_clicked(True)
-            return GameScore.ScoreMap[GameScore.ClickMine]
+            touch_grids.append(grid)
         elif grid.get_mine_count() == 0:
-            nearby_grids = self.get_nearby_grids(grid)
-            score = 0
-            for g in nearby_grids:
+            for g in self.get_nearby_grids(grid):
                 if not g.get_is_clicked():
-                    score += self.reveal_grid(g)
-            return score
-
+                    touch_grids.extend(self.reveal_grid_and_get_touch_grids(g))
         else:
-            return grid.get_mine_count()
+            touch_grids.append(grid)
 
-    def set_flag(self, grid):
+        return touch_grids
+
+    def set_flag_get_touch_grid(self, grid):
         if grid.get_is_clicked():
-            return 0
+            return []
         grid.set_is_flag(True)
         grid.set_is_clicked(True)
-        return GameScore.ScoreMap[GameScore.FlagCorrect] if grid.get_is_mine() else GameScore.ScoreMap[GameScore.FlagError]
+        return [grid]
 
-    def check_all_flag_clicked(self):
+    def is_win(self):
         for x in range(self._width):
             for y in range(self._height):
                 if not self._grids[x][y].get_is_clicked():
