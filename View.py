@@ -7,6 +7,8 @@ class View(object):
     grid_size = 32  # Size of grid
     border = 16  # Top border
     top_border = 100  # Left, Right, Bottom border
+    score_width = 200
+    score_font_size = 20
     empty = pygame.image.load("Sprites/empty.png")
     flag = pygame.image.load("Sprites/flag.png")
     grid = pygame.image.load("Sprites/Grid.png")
@@ -25,29 +27,35 @@ class View(object):
     smile = pygame.image.load("Sprites/smile.png")
     win = pygame.image.load("Sprites/win.png")
 
-    def __init__(self, nGridWidth, nGridHeight):
+    def __init__(self, nGrid_width_count, nGrid_height_count):
         pygame.init()
         pygame.display.set_caption("MineSweeper")  # S Set the caption of window
-        self._display_width = View.grid_size * nGridWidth + View.border * 2  # Display width
-        self._display_height = View.grid_size * nGridHeight + View.border + View.top_border  # Display height
+        self._display_width = View.grid_size * nGrid_width_count + View.border * 2 + View.score_width  # Display width
+        self._display_height = View.grid_size * nGrid_height_count + View.border + View.top_border  # Display height
         self._display = pygame.display.set_mode((self._display_width, self._display_height))  # Create display
         self._timer = pygame.time.Clock()
         self._grids = {}
-        self._smile_rect = pygame.Rect((self._display_width - View.grid_size) / 2,
+        self._smile_rect = pygame.Rect(((self._display_width - View.score_width) - View.grid_size) / 2,
                                        View.border,
                                        View.grid_size,
                                        View.grid_size)
 
-    def refresh_view(self, grids, mine_left):
+    def refresh_view(self, grids, players):
         self._display.fill(View.bg_color)
         for row in grids:
             for g in row:
                 self.draw_grid(g)
-        # flag count
-        mine_left_text = pygame.font.SysFont("Calibri", 50).render(str(mine_left), True, (0, 0, 0))
-        self._display.blit(mine_left_text, (self._display_width - View.border - 50, View.border))
         # smile
         self._display.blit(View.smile, self._smile_rect)
+        i = 0
+        for player in players:
+            player_text = "{0} - ({1})".format(player.get_name(), player.get_score())
+            player_render = pygame.font.SysFont("Calibri", View.score_font_size).render(player_text, True, (0, 0, 0))
+            self._display.blit(player_render,
+                               (self._display_width - View.border - View.score_width,
+                                View.border + i * View.score_font_size))
+            i += 1
+
         pygame.display.update()
 
     def draw_grid(self, grid):
@@ -89,6 +97,15 @@ class View(object):
                 self._display.blit(View.grid8, rect)
         self._grids[grid] = rect
 
+    def draw_player_get_score(self, player, score):
+        player_text = "player: " + player.get_name()
+        player_render = pygame.font.SysFont("Calibri", 20).render(player_text, True, (0, 0, 0))
+        self._display.blit(player_render, (View.border, View.border))
+        score_text = ("+ " if score >= 0 else "- ") + str(abs(score))
+        score_render = pygame.font.SysFont("Calibri", 20).render(score_text, True, (0, 0, 0))
+        self._display.blit(score_render, (View.border, View.border + 20))
+        pygame.display.update()
+
     def get_player_click(self):
         while True:
             try:
@@ -113,10 +130,6 @@ class View(object):
         for grid, rect in self._grids.items():
             if rect.collidepoint(event.pos):
                 return grid
-
-    def draw_game_over(self):
-        self._display.blit(View.game_over, self._smile_rect)  # smile change to game over
-        pygame.display.update()
 
     def draw_win(self):
         self._display.blit(View.win, self._smile_rect)  # smile change to game over
