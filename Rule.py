@@ -16,12 +16,12 @@ class Rule(object):
         score = 0
         for grid in grids:
             if is_clicked:
-                if grid.get_is_mine() and is_clicked:
+                if grid["IsMine"] and is_clicked:
                     score += Rule.ScoreMap[Rule.ClickMine]
                 else:
-                    score += grid.get_mine_count()
-            elif not is_clicked:
-                if grid.get_is_mine() and not is_clicked:
+                    score += grid["MineCount"]
+            else:
+                if grid["IsMine"] and not is_clicked:
                     score += Rule.ScoreMap[Rule.FlagCorrect]
                 else:
                     score += Rule.ScoreMap[Rule.FlagError]
