@@ -34,12 +34,8 @@ class Game(object):
         self.join(Player("Player1"))
         self.join(Computer("Computer"))
         self.init_game()
-        self._view.draw_player_get_score(self._players[self._current_player_index], 0)
-        for player in self._players:
-            if player.get_is_computer():
-                player.set_grid_container(self._container)
-
         while not self._state == Game.StateMap["EndGame"]:
+            self._view.draw_current_player(self._players[self._current_player_index])
             if self._state == Game.StateMap["Playing"] and self._players[self._current_player_index].get_is_computer():
                 action, position = self._players[self._current_player_index].computer_action()
             else:
@@ -51,9 +47,6 @@ class Game(object):
                 continue
             elif action == View.PlayerAction["Replay"]:
                 self.init_game()
-                for player in self._players:
-                    if player.get_is_computer():
-                        player.set_grid_container(self._container)
                 continue
 
             if self._state == Game.StateMap["WaitingReplay"]:
@@ -73,6 +66,9 @@ class Game(object):
         self._view.refresh_view(container.get_grids(), self._players)
         self._state = Game.StateMap["Playing"]
         self._current_player_index = 0
+        for player in self._players:
+            if player.get_is_computer():
+                player.set_grid_container(self._container)
 
     def player_click_or_set_flag(self, action, position):
         touch_grids = None

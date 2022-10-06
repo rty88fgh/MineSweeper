@@ -1,7 +1,7 @@
 import copy
 import random
 
-random.seed(10)
+
 class GridContainer(object):
     def __init__(self, width, height, mine_count):
         self._grids = {}

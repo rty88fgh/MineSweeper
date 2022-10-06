@@ -9,6 +9,7 @@ class View(object):
     top_border = 100  # Left, Right, Bottom border
     score_width = 200
     font_size = 20
+    smile_height = 50
     element_dict = {
         0: pygame.image.load("Sprites/empty.png"),
         1: pygame.image.load("Sprites/grid1.png"),
@@ -48,9 +49,10 @@ class View(object):
         self._timer = pygame.time.Clock()
         self._grids = {}
         self._smile_rect = pygame.Rect(((self._display_width - View.score_width) - View.grid_size) / 2,
-                                       View.border,
+                                       View.smile_height,
                                        View.grid_size,
                                        View.grid_size)
+        self._score_texts = []
 
     def refresh_view(self, grids, players):
         self._display.fill(View.bg_color)
@@ -92,12 +94,19 @@ class View(object):
         self._grids[(grid["X"], grid["Y"])] = rect
 
     def draw_player_get_score(self, player, score):
-        player_text = "player: " + player.get_name()
+        player_text = player.get_name() + " Score: " + ("+ " if score >= 0 else "- ") + str(abs(score))
+        self._score_texts.append(player_text)
+
+        for i in range(len(self._score_texts)):
+            player_render = pygame.font.SysFont("Calibri", View.font_size).render(self._score_texts[i], True, (0, 0, 0))
+            self._display.blit(player_render, (self._display_width - View.score_width, View.top_border + i * View.font_size))
+
+        pygame.display.update()
+
+    def draw_current_player(self, player):
+        player_text = "Current Player: " + player.get_name()
         player_render = pygame.font.SysFont("Calibri", View.font_size).render(player_text, True, (0, 0, 0))
         self._display.blit(player_render, (View.border, View.border))
-        score_text = ("+ " if score >= 0 else "- ") + str(abs(score))
-        score_render = pygame.font.SysFont("Calibri", View.font_size).render(score_text, True, (0, 0, 0))
-        self._display.blit(score_render, (View.border, View.border + 20))
         pygame.display.update()
 
     def get_player_action_and_position(self):
