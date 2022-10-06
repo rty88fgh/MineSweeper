@@ -27,7 +27,7 @@ class Game(object):
         self.init_game()
         self._view.draw_player_get_score(self._players[self._current_player_index], 0)
         while not self._state == GameState.EndGame:
-            action, position = self._view.get_player_action_and_grid()
+            action, position = self._view.get_player_action_and_position()
             if action == View.PlayerAction["Quit"]:
                 self._view.end_game()
                 self._state = GameState.EndGame

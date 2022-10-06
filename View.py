@@ -100,7 +100,7 @@ class View(object):
         self._display.blit(score_render, (View.border, View.border + 20))
         pygame.display.update()
 
-    def get_player_action_and_grid(self):
+    def get_player_action_and_position(self):
         while True:
             try:
                 for event in pygame.event.get():
@@ -110,7 +110,7 @@ class View(object):
                         if self._smile_rect.collidepoint(event.pos):
                             return View.PlayerAction["Replay"], None
 
-                        position = self.get_click_grid(event)
+                        position = self.get_clicked_position(event)
                         if position is None:
                             continue
                         elif event.button == View.ButtonType["LeftButton"]:
@@ -120,7 +120,7 @@ class View(object):
             except KeyboardInterrupt:
                 return View.PlayerAction["Quit"], None
 
-    def get_click_grid(self, event):
+    def get_clicked_position(self, event):
         for position, rect in self._grids.items():
             if rect.collidepoint(event.pos):
                 return position
