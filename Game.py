@@ -1,4 +1,6 @@
 import copy
+
+from Computer import Computer
 from GridContainer import GridContainer
 from Player import Player
 from Rule import Rule
@@ -9,12 +11,19 @@ class Game(object):
     GAME_WIDTH = 10
     GAME_HEIGHT = 10
     GAME_MINE_COUNT = 9
+    StateMap = {
+        "WaitingPlayer": "WaitingPlayer",
+        "InitGrid": "InitGrid",
+        "Playing": "Playing",
+        "WaitingReplay": "WaitingReplay",
+        "EndGame": "EndGame",
+    }
 
     def __init__(self):
         self._players = []
         self._container = None
         self._view = None
-        self._state = GameState.WaitingPlayer
+        self._state = Game.StateMap["InitGrid"]
         self._current_player_index = 0
         self._rule = Rule()
 
@@ -23,27 +32,38 @@ class Game(object):
 
     def run(self):
         self.join(Player("Player1"))
-        self.join(Player("Player2"))
+        self.join(Computer("Computer"))
         self.init_game()
         self._view.draw_player_get_score(self._players[self._current_player_index], 0)
-        while not self._state == GameState.EndGame:
-            action, position = self._view.get_player_action_and_position()
+        for player in self._players:
+            if player.get_is_computer():
+                player.set_grid_container(self._container)
+
+        while not self._state == Game.StateMap["EndGame"]:
+            if self._state == Game.StateMap["Playing"] and self._players[self._current_player_index].get_is_computer():
+                action, position = self._players[self._current_player_index].computer_action()
+            else:
+                action, position = self._view.get_player_action_and_position()
+
             if action == View.PlayerAction["Quit"]:
                 self._view.end_game()
-                self._state = GameState.EndGame
+                self._state = Game.StateMap["EndGame"]
                 continue
             elif action == View.PlayerAction["Replay"]:
                 self.init_game()
+                for player in self._players:
+                    if player.get_is_computer():
+                        player.set_grid_container(self._container)
                 continue
 
-            if self._state == GameState.WaitingReplay:
+            if self._state == Game.StateMap["WaitingReplay"]:
                 continue
 
             if action == View.PlayerAction["Flag"] or action == View.PlayerAction["ClickGrid"]:
                 self.player_click_or_set_flag(action, position)
 
     def init_game(self):
-        self._state = GameState.InitGrid
+        self._state = Game.StateMap["InitGrid"]
         self._view = View(Game.GAME_WIDTH, Game.GAME_HEIGHT)
         container = GridContainer(Game.GAME_WIDTH, Game.GAME_HEIGHT, Game.GAME_MINE_COUNT)
         container.init_grids()
@@ -51,7 +71,7 @@ class Game(object):
         for player in self._players:
             player.reset_score()
         self._view.refresh_view(container.get_grids(), self._players)
-        self._state = GameState.Playing
+        self._state = Game.StateMap["Playing"]
         self._current_player_index = 0
 
     def player_click_or_set_flag(self, action, position):
@@ -73,7 +93,7 @@ class Game(object):
             order_players = [copy.copy(p) for p in self._players]
             order_players.sort(key=lambda player: player.get_score(), reverse=True)
             self._view.draw_win(order_players[0].get_name())
-            self._state = GameState.WaitingReplay
+            self._state = Game.StateMap["WaitingReplay"]
 
     def add_player_score(self, score):
         self._players[self._current_player_index].add_score(score)
@@ -84,11 +104,3 @@ class Game(object):
         self._current_player_index += 1
         if self._current_player_index == len(self._players):
             self._current_player_index = 0
-
-
-class GameState(object):
-    WaitingPlayer = "WaitingPlayer"
-    InitGrid = "InitGrid"
-    Playing = "Playing"
-    WaitingReplay = "WaitingReplay"
-    EndGame = "EndGame"

@@ -1,7 +1,7 @@
 import copy
 import random
 
-
+random.seed(10)
 class GridContainer(object):
     def __init__(self, width, height, mine_count):
         self._grids = {}
@@ -11,7 +11,13 @@ class GridContainer(object):
         self._mines_grid = []
 
     def get_grids(self):
-        return copy.copy(self._grids)
+        return self._grids
+
+    def get_width(self):
+        return self._width
+
+    def get_height(self):
+        return self._height
 
     def init_grids(self):
         self._grids = {}
@@ -35,12 +41,12 @@ class GridContainer(object):
                 continue
             grid["IsMine"] = True
             self._mines_grid.append(grid)
-            nearby_grids = self.get_nearby_grids(grid)
-            for g in nearby_grids:
+            adjacent_grids = self.get_adjacent_grids(grid)
+            for g in adjacent_grids:
                 g["MineCount"] += 1
             mine_count += 1
 
-    def get_nearby_grids(self, grid):
+    def get_adjacent_grids(self, grid):
         grids = []
         for x in [grid["X"] - 1, grid["X"], grid["X"] + 1]:
             for y in [grid["Y"] - 1, grid["Y"], grid["Y"] + 1]:
@@ -68,7 +74,7 @@ class GridContainer(object):
             grid["IsMineClicked"] = True
             touch_grids.append(grid)
         elif grid["MineCount"] == 0:
-            for g in self.get_nearby_grids(grid):
+            for g in self.get_adjacent_grids(grid):
                 if not g["IsClicked"]:
                     touch_grids.extend(self.reveal_grid_and_get_touch_grids((g["X"], g["Y"])))
         else:
