@@ -4,16 +4,16 @@ import pygame as pygame
 
 
 class View(object):
-    bg_color = (192, 192, 192)
-    grid_color = (128, 128, 128)
-    grid_size = 32  # Size of grid
-    border = 16  # Top border
-    top_border = 100  # Left, Right, Bottom border
-    score_width = 250
-    font_size = 20
-    smile_height = 50
-    score_max_row = 15
-    element_dict = {
+    BgColor = (192, 192, 192)
+    GridColor = (128, 128, 128)
+    GridSize = 32  # Size of grid
+    Border = 16  # Top border
+    TopBorder = 100  # Left, Right, Bottom border
+    ScoreWidth = 250
+    FontSize = 20
+    SmileHeight = 50
+    ScoreMaxRow = 15
+    ElementDict = {
         0: pygame.image.load("Sprites/empty.png"),
         1: pygame.image.load("Sprites/grid1.png"),
         2: pygame.image.load("Sprites/grid2.png"),
@@ -46,77 +46,77 @@ class View(object):
     def __init__(self, nGrid_width_count, nGrid_height_count):
         pygame.init()
         pygame.display.set_caption("MineSweeper")  # S Set the caption of window
-        self._display_width = View.grid_size * nGrid_width_count + View.border * 2 + View.score_width  # Display width
-        self._display_height = View.grid_size * nGrid_height_count + View.border + View.top_border  # Display height
+        self._display_width = View.GridSize * nGrid_width_count + View.Border * 2 + View.ScoreWidth  # Display width
+        self._display_height = View.GridSize * nGrid_height_count + View.Border + View.TopBorder  # Display height
         self._display = pygame.display.set_mode((self._display_width, self._display_height))  # Create display
         self._timer = pygame.time.Clock()
         self._grids = {}
-        self._smile_rect = pygame.Rect(((self._display_width - View.score_width) - View.grid_size) / 2,
-                                       View.smile_height,
-                                       View.grid_size,
-                                       View.grid_size)
+        self._smile_rect = pygame.Rect(((self._display_width - View.ScoreWidth) - View.GridSize) / 2,
+                                       View.SmileHeight,
+                                       View.GridSize,
+                                       View.GridSize)
         self._score_texts = []
 
-    def refresh_view(self, grids, players):
-        self._display.fill(View.bg_color)
+    def RefreshView(self, grids, players):
+        self._display.fill(View.BgColor)
 
         for g in grids.values():
-            self.draw_grid(g)
+            self.DrawGrid(g)
         # smile
-        self._display.blit(View.element_dict["Smile"], self._smile_rect)
+        self._display.blit(View.ElementDict["Smile"], self._smile_rect)
 
         for i in range(len(players)):
-            player_text = "{0} - ({1})".format(players[i].get_name(), players[i].get_score())
-            player_render = pygame.font.SysFont("Calibri", View.font_size).render(player_text, True, (0, 0, 0))
+            player_text = "{0} - ({1})".format(players[i].GetName(), players[i].GetScore())
+            player_render = pygame.font.SysFont("Calibri", View.FontSize).render(player_text, True, (0, 0, 0))
             self._display.blit(player_render,
-                               (self._display_width - View.border - View.score_width,
-                                View.border + i * View.font_size))
+                               (self._display_width - View.Border - View.ScoreWidth,
+                                View.Border + i * View.FontSize))
 
         pygame.display.update()
 
-    def draw_grid(self, grid):
-        rect = pygame.Rect(View.border + grid["X"] * View.grid_size,
-                           View.top_border + grid["Y"] * View.grid_size, View.grid_size, View.grid_size)
+    def DrawGrid(self, grid):
+        rect = pygame.Rect(View.Border + grid["X"] * View.GridSize,
+                           View.TopBorder + grid["Y"] * View.GridSize, View.GridSize, View.GridSize)
 
         if grid["IsFlag"]:
             if not grid["IsMine"] and grid["IsClicked"]:
-                self._display.blit(View.element_dict["MineFalse"], rect)
+                self._display.blit(View.ElementDict["MineFalse"], rect)
             else:
-                self._display.blit(View.element_dict["Flag"], rect)
+                self._display.blit(View.ElementDict["Flag"], rect)
         elif grid["IsMine"]:
             if grid["IsMineClicked"]:
-                self._display.blit(View.element_dict["MineClicked"], rect)
+                self._display.blit(View.ElementDict["MineClicked"], rect)
             elif grid["IsClicked"]:
-                self._display.blit(View.element_dict["Mine"], rect)
+                self._display.blit(View.ElementDict["Mine"], rect)
             else:
-                self._display.blit(View.element_dict["Grid"], rect)
+                self._display.blit(View.ElementDict["Grid"], rect)
         elif not grid["IsClicked"]:
-            self._display.blit(View.element_dict["Grid"], rect)
+            self._display.blit(View.ElementDict["Grid"], rect)
         else:
-            self._display.blit(View.element_dict[grid["MineCount"]], rect)
+            self._display.blit(View.ElementDict[grid["MineCount"]], rect)
         self._grids[(grid["X"], grid["Y"])] = rect
 
-    def draw_player_get_score(self, player, score):
-        player_text = player.get_name() + " Score: " + ("+ " if score >= 0 else "- ") + str(abs(score))
+    def DrawPlayerGetScore(self, player, score):
+        player_text = player.GetName() + " Score: " + ("+ " if score >= 0 else "- ") + str(abs(score))
         self._score_texts.append(player_text)
-        for i in range(View.score_max_row):
+        for i in range(View.ScoreMaxRow):
             if i >= len(self._score_texts):
                 break
-            row = i if len(self._score_texts) < View.score_max_row else len(self._score_texts) - View.score_max_row + i
-            add_row_text = "{0} - {1}".format(row, self._score_texts[i])
-            player_render = pygame.font.SysFont("Calibri", View.font_size).render(add_row_text, True, (0, 0, 0))
+            row = i if len(self._score_texts) < View.ScoreMaxRow else len(self._score_texts) - View.ScoreMaxRow + i
+            add_row_text = "{0} - {1}".format(row, self._score_texts[row])
+            player_render = pygame.font.SysFont("Calibri", View.FontSize).render(add_row_text, True, (0, 0, 0))
             self._display.blit(player_render,
-                               (self._display_width - View.score_width, View.top_border + i * View.font_size))
+                               (self._display_width - View.ScoreWidth, View.TopBorder + i * View.FontSize))
 
         pygame.display.update()
 
-    def draw_current_player(self, player):
-        player_text = "Current Player: " + player.get_name()
-        player_render = pygame.font.SysFont("Calibri", View.font_size).render(player_text, True, (0, 0, 0))
-        self._display.blit(player_render, (View.border, View.border))
+    def DrawCurrentPlayer(self, player):
+        player_text = "Current Player: " + player.GetName()
+        player_render = pygame.font.SysFont("Calibri", View.FontSize).render(player_text, True, (0, 0, 0))
+        self._display.blit(player_render, (View.Border, View.Border))
         pygame.display.update()
 
-    def get_player_action_and_position(self):
+    def GePlayerActionPosition(self):
         while True:
             try:
                 for event in pygame.event.get():
@@ -126,7 +126,7 @@ class View(object):
                         if self._smile_rect.collidepoint(event.pos):
                             return View.PlayerAction["Replay"], None
 
-                        position = self.get_clicked_position(event)
+                        position = self.GetClickedPosition(event)
                         if position is None:
                             continue
                         elif event.button == View.ButtonType["LeftButton"]:
@@ -136,20 +136,20 @@ class View(object):
             except KeyboardInterrupt:
                 return View.PlayerAction["Quit"], None
 
-    def get_clicked_position(self, event):
+    def GetClickedPosition(self, event):
         for position, rect in self._grids.items():
             if rect.collidepoint(event.pos):
                 return position
 
-    def draw_win(self, win_player_name):
-        self._display.blit(View.element_dict["Win"], self._smile_rect)  # smile change to win
+    def DrawWin(self, win_player_name):
+        self._display.blit(View.ElementDict["Win"], self._smile_rect)  # smile change to win
         win_str = "{} Win!!!".format(win_player_name)
-        win_render = pygame.font.SysFont("Calibri", View.font_size).render(win_str, True, (0, 0, 0))
+        win_render = pygame.font.SysFont("Calibri", View.FontSize).render(win_str, True, (0, 0, 0))
         win_rect = win_render.get_rect()
-        win_rect.center = ((self._display_width - View.border - View.score_width) / 2,
-                           View.border + View.font_size + View.font_size / 2)
+        win_rect.center = ((self._display_width - View.Border - View.ScoreWidth) / 2,
+                           View.Border + View.FontSize + View.FontSize / 2)
         self._display.blit(win_render, win_rect)
         pygame.display.update()
 
-    def end_game(self):
+    def EndGame(self):
         pygame.quit()

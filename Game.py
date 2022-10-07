@@ -1,7 +1,7 @@
 import copy
 
 from Computer import Computer
-from GridContainer import GridContainer
+from GridManager import GridManager
 from Player import Player
 from Rule import Rule
 from View import View
@@ -9,8 +9,8 @@ from View import View
 
 class Game(object):
     StateMap = {
-        "WaitingPlayer": "WaitingPlayer",
         "InitGrid": "InitGrid",
+        "WaitingPlayer": "WaitingPlayer",
         "Playing": "Playing",
         "WaitingReplay": "WaitingReplay",
         "EndGame": "EndGame",
@@ -18,7 +18,7 @@ class Game(object):
 
     def __init__(self, width, height, mine_count):
         self._players = []
-        self._container = None
+        self._gridManager = None
         self._view = None
         self._state = Game.StateMap["InitGrid"]
         self._current_player_index = 0
@@ -27,77 +27,77 @@ class Game(object):
         self._height = height
         self._mine_count = mine_count
 
-    def join(self, player):
+    def Join(self, player):
         self._players.append(player)
 
-    def run(self):
-        self.join(Player("Player1"))
-        self.join(Computer("Computer"))
-        self.init_game()
+    def Run(self):
+        self.Join(Player("Player1"))
+        self.Join(Computer("Computer"))
+        self.InitGame()
         while not self._state == Game.StateMap["EndGame"]:
-            self._view.draw_current_player(self._players[self._current_player_index])
-            if self._state == Game.StateMap["Playing"] and self._players[self._current_player_index].get_is_computer():
-                action, position = self._players[self._current_player_index].computer_action()
+            self._view.DrawCurrentPlayer(self._players[self._current_player_index])
+            if self._state == Game.StateMap["Playing"] and self._players[self._current_player_index].GetIsComputer():
+                action, position = self._players[self._current_player_index].ComputerAction()
             else:
-                action, position = self._view.get_player_action_and_position()
+                action, position = self._view.GePlayerActionPosition()
 
             if action == View.PlayerAction["Quit"]:
-                self._view.end_game()
+                self._view.EndGame()
                 self._state = Game.StateMap["EndGame"]
                 continue
             elif action == View.PlayerAction["Replay"]:
-                self.init_game()
+                self.InitGame()
                 continue
 
             if self._state == Game.StateMap["WaitingReplay"]:
                 continue
 
             if action == View.PlayerAction["Flag"] or action == View.PlayerAction["ClickGrid"]:
-                self.player_click_or_set_flag(action, position)
+                self.ProcessGridAndCalculateScore(action, position)
 
-    def init_game(self):
+    def InitGame(self):
         self._state = Game.StateMap["InitGrid"]
         self._view = View(self._width, self._height)
-        container = GridContainer(self._width, self._height, self._mine_count)
-        container.init_grids()
-        self._container = container
+        manager = GridManager(self._width, self._height, self._mine_count)
+        manager.InitGrids()
+        self._gridManager = manager
         # setup players
         for player in self._players:
-            player.reset_score()
-            if player.get_is_computer():
-                player.set_grid_container(self._container)
+            player.ResetScore()
+            if player.GetIsComputer():
+                player.SetGridContainer(self._gridManager)
 
-        self._view.refresh_view(container.get_grids(), self._players)
+        self._view.RefreshView(manager.GetGrids(), self._players)
         self._state = Game.StateMap["Playing"]
         self._current_player_index = 0
 
-    def player_click_or_set_flag(self, action, position):
+    def ProcessGridAndCalculateScore(self, action, position):
         touch_grids = None
         if action == View.PlayerAction["ClickGrid"]:
-            touch_grids = self._container.reveal_grid_and_get_touch_grids(position)
+            touch_grids = self._gridManager.RevealGrid(position)
         elif action == View.PlayerAction["Flag"]:
-            touch_grids = self._container.set_flag_get_touch_grid(position)
+            touch_grids = self._gridManager.Mark(position)
 
-        score = Rule.calculate_score(touch_grids, action == View.PlayerAction["ClickGrid"])
+        score = Rule.CalculateScore(touch_grids, action == View.PlayerAction["ClickGrid"])
 
         if score == 0:
             return
 
-        self.add_player_score(score)
-        self.adjust_player_sequence()
+        self.AddPlayerScore(score)
+        self.AdjustPlayerSequence()
 
-        if self._container.is_all_grid_clicked():
+        if self._gridManager.IsAllGridsClicked():
             order_players = [copy.copy(p) for p in self._players]
-            order_players.sort(key=lambda player: player.get_score(), reverse=True)
-            self._view.draw_win(order_players[0].get_name())
+            order_players.sort(key=lambda player: player.GetScore(), reverse=True)
+            self._view.DrawWin(order_players[0].GetName())
             self._state = Game.StateMap["WaitingReplay"]
 
-    def add_player_score(self, score):
-        self._players[self._current_player_index].add_score(score)
-        self._view.refresh_view(self._container.get_grids(), self._players)
-        self._view.draw_player_get_score(self._players[self._current_player_index], score)
+    def AddPlayerScore(self, score):
+        self._players[self._current_player_index].AddScore(score)
+        self._view.RefreshView(self._gridManager.GetGrids(), self._players)
+        self._view.DrawPlayerGetScore(self._players[self._current_player_index], score)
 
-    def adjust_player_sequence(self):
+    def AdjustPlayerSequence(self):
         self._current_player_index += 1
         if self._current_player_index == len(self._players):
             self._current_player_index = 0

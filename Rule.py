@@ -9,7 +9,7 @@ class Rule(object):
     }
 
     @staticmethod
-    def calculate_score(grids, is_clicked):
+    def CalculateScore(grids, is_clicked):
         if grids is None:
             return 0
 

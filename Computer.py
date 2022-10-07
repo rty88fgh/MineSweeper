@@ -1,8 +1,10 @@
+import gevent
+
 from Player import Player
 
 
 class Computer(Player):
-    ComputerAction = {
+    ComputerActionMap = {
         "ClickGrid": "ClickGrid",
         "Flag": "Flag",
     }
@@ -12,17 +14,17 @@ class Computer(Player):
         self._container = None
         self._grids = None
 
-    def set_grid_container(self, container):
+    def SetGridContainer(self, container):
         self._container = container
-        self._grids = self._container.get_grids()
+        self._grids = self._container.GetGrids()
 
-    def computer_action(self):
+    def ComputerAction(self):
         set_flag = []
         must_not_mine = []
         unknown_girds = []
-
+        gevent.sleep(1)
         for xy, grid in self._grids.items():
-            adjacent_grids = self._container.get_adjacent_grids(grid)
+            adjacent_grids = self._container.GetAdjacentGrids(grid)
             if grid["IsClicked"]:
                 if len([g for g in adjacent_grids if g["IsClicked"]]) == len(adjacent_grids):
                     continue
@@ -42,21 +44,21 @@ class Computer(Player):
 
         if len(set_flag) > 0:
             select_grid = set_flag[0]
-            return Computer.ComputerAction["Flag"], (select_grid["X"], select_grid["Y"])
+            return Computer.ComputerActionMap["Flag"], (select_grid["X"], select_grid["Y"])
 
         elif len(must_not_mine) > 0:
             select_grid = must_not_mine[0]
-            return Computer.ComputerAction["ClickGrid"], (select_grid["X"], select_grid["Y"])
+            return Computer.ComputerActionMap["ClickGrid"], (select_grid["X"], select_grid["Y"])
 
         elif len(unknown_girds) > 0:
             select_grid = unknown_girds[0]
-            return Computer.ComputerAction["ClickGrid"], (select_grid["X"], select_grid["Y"])
+            return Computer.ComputerActionMap["ClickGrid"], (select_grid["X"], select_grid["Y"])
         else:
             # calculate probability
             have_mine_count_grid = [g for g in self._grids.values() if g["IsClicked"] and g["MineCount"] > 0]
             probability_dict = {}
             for grid in have_mine_count_grid:
-                adjacent_grids = [g for g in self._container.get_adjacent_grids(grid)]
+                adjacent_grids = [g for g in self._container.GetAdjacentGrids(grid)]
                 not_clicked = [g for g in adjacent_grids if not g["IsClicked"]]
                 clicked_grid_count = len(adjacent_grids) - len(not_clicked)
                 # all grids were clicked
@@ -72,8 +74,8 @@ class Computer(Player):
                         probability_dict[xy] = probability
 
             # find less probability of grid
-            unclicked_grid = [pair for pair in probability_dict.items()]
-            unclicked_grid.sort(key=lambda p: p[1])
-            print unclicked_grid[0]
-            return Computer.ComputerAction["Flag"] if unclicked_grid[0][1] == float(1) else \
-                   Computer.ComputerAction["ClickGrid"], unclicked_grid[0][0]
+            nonclicked_grid = [pair for pair in probability_dict.items()]
+            nonclicked_grid.sort(key=lambda p: p[1])
+            print nonclicked_grid[0]
+            return Computer.ComputerActionMap["Flag"] if nonclicked_grid[0][1] == float(1) else \
+                   Computer.ComputerActionMap["ClickGrid"], nonclicked_grid[0][0]
