@@ -13,8 +13,19 @@ class Player(object):
     def GetIsComputer(self):
         return self._is_computer
 
+    def MinusScore(self, value):
+        if value < 0:
+            raise ValueError()
+        self._calcScore(value * -1)
+
     def AddScore(self, value):
-        self._score += value
+        if value < 0:
+            raise ValueError()
+
+        self._calcScore(value)
 
     def ResetScore(self):
         self._score = 0
+
+    def _calcScore(self, value):
+        self._score += value

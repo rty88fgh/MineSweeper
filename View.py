@@ -66,7 +66,7 @@ class View(object):
         self._display.blit(View.ElementDict["Smile"], self._smile_rect)
 
         for i in range(len(players)):
-            player_text = "{0} - ({1})".format(players[i].GetName(), players[i].GetScore())
+            player_text = "{0}: ({1})".format(players[i].GetName(), players[i].GetScore())
             player_render = pygame.font.SysFont("Calibri", View.FontSize).render(player_text, True, (0, 0, 0))
             self._display.blit(player_render,
                                (self._display_width - View.Border - View.ScoreWidth,
@@ -151,5 +151,5 @@ class View(object):
         self._display.blit(win_render, win_rect)
         pygame.display.update()
 
-    def EndGame(self):
+    def CloseWindows(self):
         pygame.quit()
