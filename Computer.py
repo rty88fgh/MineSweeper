@@ -22,7 +22,7 @@ class Computer(Player):
         unknown_girds = []
 
         for xy, grid in self._grids.items():
-            adjacent_grids = self.get_adjacent_grids(grid)
+            adjacent_grids = self._container.get_adjacent_grids(grid)
             if grid["IsClicked"]:
                 if len([g for g in adjacent_grids if g["IsClicked"]]) == len(adjacent_grids):
                     continue
@@ -52,13 +52,14 @@ class Computer(Player):
             select_grid = unknown_girds[0]
             return Computer.ComputerAction["ClickGrid"], (select_grid["X"], select_grid["Y"])
         else:
+            # calculate probability
             have_mine_count_grid = [g for g in self._grids.values() if g["IsClicked"] and g["MineCount"] > 0]
             probability_dict = {}
             for grid in have_mine_count_grid:
-                adjacent_grids = [g for g in self.get_adjacent_grids(grid)]
+                adjacent_grids = [g for g in self._container.get_adjacent_grids(grid)]
                 not_clicked = [g for g in adjacent_grids if not g["IsClicked"]]
                 clicked_grid_count = len(adjacent_grids) - len(not_clicked)
-                # all
+                # all grids were clicked
                 if len(not_clicked) == 0:
                     continue
                 is_mine_clicked = [g for g in adjacent_grids if g["IsMine"] and g["IsClicked"]]
@@ -66,21 +67,13 @@ class Computer(Player):
                     len(adjacent_grids) - clicked_grid_count)
                 for ag in not_clicked:
                     xy = ag["X"], ag["Y"]
+                    # it will override the probability if adjacent grid has high probability
                     if xy not in probability_dict or probability > probability_dict[xy]:
                         probability_dict[xy] = probability
+
+            # find less probability of grid
             unclicked_grid = [pair for pair in probability_dict.items()]
             unclicked_grid.sort(key=lambda p: p[1])
             print unclicked_grid[0]
-            return Computer.ComputerAction["ClickGrid"], unclicked_grid[0][0]
-
-    def get_adjacent_grids(self, grid):
-        grids = []
-        for x in [grid["X"] - 1, grid["X"], grid["X"] + 1]:
-            for y in [grid["Y"] - 1, grid["Y"], grid["Y"] + 1]:
-                if x == grid["X"] and y == grid["Y"]:
-                    continue
-                if x > self._container.get_width() - 1 or y > self._container.get_height() - 1 or x < 0 or y < 0:
-                    continue
-                grids.append(self._grids[(x, y)])
-
-        return grids
+            return Computer.ComputerAction["Flag"] if unclicked_grid[0][1] == float(1) else \
+                   Computer.ComputerAction["ClickGrid"], unclicked_grid[0][0]

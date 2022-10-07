@@ -1,3 +1,5 @@
+import copy
+
 import pygame as pygame
 
 
@@ -7,9 +9,10 @@ class View(object):
     grid_size = 32  # Size of grid
     border = 16  # Top border
     top_border = 100  # Left, Right, Bottom border
-    score_width = 200
+    score_width = 250
     font_size = 20
     smile_height = 50
+    score_max_row = 15
     element_dict = {
         0: pygame.image.load("Sprites/empty.png"),
         1: pygame.image.load("Sprites/grid1.png"),
@@ -96,10 +99,14 @@ class View(object):
     def draw_player_get_score(self, player, score):
         player_text = player.get_name() + " Score: " + ("+ " if score >= 0 else "- ") + str(abs(score))
         self._score_texts.append(player_text)
-
-        for i in range(len(self._score_texts)):
-            player_render = pygame.font.SysFont("Calibri", View.font_size).render(self._score_texts[i], True, (0, 0, 0))
-            self._display.blit(player_render, (self._display_width - View.score_width, View.top_border + i * View.font_size))
+        for i in range(View.score_max_row):
+            if i >= len(self._score_texts):
+                break
+            row = i if len(self._score_texts) < View.score_max_row else len(self._score_texts) - View.score_max_row + i
+            add_row_text = "{0} - {1}".format(row, self._score_texts[i])
+            player_render = pygame.font.SysFont("Calibri", View.font_size).render(add_row_text, True, (0, 0, 0))
+            self._display.blit(player_render,
+                               (self._display_width - View.score_width, View.top_border + i * View.font_size))
 
         pygame.display.update()
 
@@ -140,7 +147,7 @@ class View(object):
         win_render = pygame.font.SysFont("Calibri", View.font_size).render(win_str, True, (0, 0, 0))
         win_rect = win_render.get_rect()
         win_rect.center = ((self._display_width - View.border - View.score_width) / 2,
-                           View.border + self._smile_rect.height + View.font_size / 2)
+                           View.border + View.font_size + View.font_size / 2)
         self._display.blit(win_render, win_rect)
         pygame.display.update()
 

@@ -8,9 +8,6 @@ from View import View
 
 
 class Game(object):
-    GAME_WIDTH = 10
-    GAME_HEIGHT = 10
-    GAME_MINE_COUNT = 9
     StateMap = {
         "WaitingPlayer": "WaitingPlayer",
         "InitGrid": "InitGrid",
@@ -19,13 +16,16 @@ class Game(object):
         "EndGame": "EndGame",
     }
 
-    def __init__(self):
+    def __init__(self, width, height, mine_count):
         self._players = []
         self._container = None
         self._view = None
         self._state = Game.StateMap["InitGrid"]
         self._current_player_index = 0
         self._rule = Rule()
+        self._width = width
+        self._height = height
+        self._mine_count = mine_count
 
     def join(self, player):
         self._players.append(player)
@@ -57,18 +57,19 @@ class Game(object):
 
     def init_game(self):
         self._state = Game.StateMap["InitGrid"]
-        self._view = View(Game.GAME_WIDTH, Game.GAME_HEIGHT)
-        container = GridContainer(Game.GAME_WIDTH, Game.GAME_HEIGHT, Game.GAME_MINE_COUNT)
+        self._view = View(self._width, self._height)
+        container = GridContainer(self._width, self._height, self._mine_count)
         container.init_grids()
         self._container = container
+        # setup players
         for player in self._players:
             player.reset_score()
+            if player.get_is_computer():
+                player.set_grid_container(self._container)
+
         self._view.refresh_view(container.get_grids(), self._players)
         self._state = Game.StateMap["Playing"]
         self._current_player_index = 0
-        for player in self._players:
-            if player.get_is_computer():
-                player.set_grid_container(self._container)
 
     def player_click_or_set_flag(self, action, position):
         touch_grids = None

@@ -46,18 +46,6 @@ class GridContainer(object):
                 g["MineCount"] += 1
             mine_count += 1
 
-    def get_adjacent_grids(self, grid):
-        grids = []
-        for x in [grid["X"] - 1, grid["X"], grid["X"] + 1]:
-            for y in [grid["Y"] - 1, grid["Y"], grid["Y"] + 1]:
-                if x == grid["X"] and y == grid["Y"]:
-                    continue
-                if x > self._width - 1 or y > self._height - 1 or x < 0 or y < 0:
-                    continue
-                grids.append(self._grids[(x, y)])
-
-        return grids
-
     def reveal_grid_and_get_touch_grids(self, position):
         grid = self._grids.get(position, None)
         if grid is None:
@@ -96,3 +84,16 @@ class GridContainer(object):
                 if not self._grids[(x, y)]["IsClicked"]:
                     return False
         return True
+
+    def get_adjacent_grids(self, grid):
+        grids = []
+        for x in [grid["X"] - 1, grid["X"], grid["X"] + 1]:
+            for y in [grid["Y"] - 1, grid["Y"], grid["Y"] + 1]:
+                if x == grid["X"] and y == grid["Y"]:
+                    continue
+                if x > self._width - 1 or y > self._height - 1 or x < 0 or y < 0:
+                    continue
+                grids.append(self._grids[(x, y)])
+
+        return grids
+
