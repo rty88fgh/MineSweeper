@@ -25,7 +25,12 @@ class GridManager(object):
                     "IsMineClicked": False,
                     "MineCount": 0,
                     "IsClicked": False,
+                    "AdjacentGrids": []
                 }
+
+        # Generate adjacent grids
+        for grid in self._grids.values():
+            grid["AdjacentGrids"] = self._getAdjacentGrids(grid)
 
         # Generate mine
         mine_count = 0
@@ -35,10 +40,11 @@ class GridManager(object):
                 continue
             grid["IsMine"] = True
             self._mines_grid.append(grid)
-            adjacent_grids = GridManager.GetAdjacentGrids(grid, self._grids)
+            adjacent_grids = grid["AdjacentGrids"]
             for g in adjacent_grids:
                 g["MineCount"] += 1
             mine_count += 1
+
 
     def RevealGrid(self, position):
         grid = self._grids.get(position, None)
@@ -61,7 +67,7 @@ class GridManager(object):
             return self._calcScore(grid, True)
 
         score = 0
-        for g in self.GetAdjacentGrids(grid, self._grids):
+        for g in grid["AdjacentGrids"]:
             if not g["IsClicked"]:
                 score += self.RevealGrid((g["X"], g["Y"]))
         return score
@@ -69,7 +75,7 @@ class GridManager(object):
     def MarkGrid(self, position):
         grid = self._grids[position]
         if grid["IsClicked"]:
-            return []
+            return 0
         grid["IsFlag"] = True
         grid["IsClicked"] = True
         return self._calcScore(grid, False)
@@ -103,11 +109,12 @@ class GridManager(object):
 
         return score
 
-    @staticmethod
-    def GetAdjacentGrids(grid, allGrids):
-        eightGrids = [g for g in allGrids.values() if
-                      abs(g["X"] - grid["X"]) <= 1 and
-                      abs(g["Y"] - grid["Y"]) <= 1 and
-                      not (g["X"] == grid["X"] and g["Y"] == grid["Y"])]
+    def _getAdjacentGrids(self, grid):
+        relatedPosition = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        eightGrids = []
+        for i in range(len(relatedPosition)):
+            item = self._grids.get((grid["X"] + relatedPosition[i][0], grid["Y"] + relatedPosition[i][1]), None)
+            if item is not None:
+                eightGrids.append(item)
 
         return eightGrids

@@ -21,7 +21,7 @@ class Computer(Player):
         }
 
         for grid in grids.values():
-            adjacent_grids = GridManager.GetAdjacentGrids(grid, grids)
+            adjacent_grids = grid["AdjacentGrids"]
             if grid["IsClicked"]:
                 if len([g for g in adjacent_grids if g["IsClicked"]]) == len(adjacent_grids):
                     continue
@@ -59,7 +59,7 @@ class Computer(Player):
             have_mine_count_grid = [g for g in grids if g["IsClicked"] and g["MineCount"] > 0]
             probability_dict = {}
             for grid in have_mine_count_grid:
-                adjacent_grids = [g for g in GridManager.GetAdjacentGrids(grid, grids)]
+                adjacent_grids = grid["AdjacentGrids"]
                 not_clicked = [g for g in adjacent_grids if not g["IsClicked"]]
                 clicked_grid_count = len(adjacent_grids) - len(not_clicked)
                 # all grids were clicked
