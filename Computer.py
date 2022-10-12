@@ -8,7 +8,7 @@ class Computer(Player):
     def __init__(self, name):
         super(Computer, self).__init__(name, True)
 
-    def ComputerAction(self, grids):
+    def GetComputerAction(self, grids):
         set_flag = []
         must_not_mine = []
         unknown_girds = []

@@ -38,7 +38,7 @@ class Game(object):
         self._current_player_index = 0
         for player in self._players:
             player.ResetScore()
-
+        self._view.RefreshView(self._gridManager.GetGrids(), self._players)
 
     def _processPlayerAction(self, action, position):
         score = 0
@@ -81,7 +81,7 @@ class Game(object):
         while not self._state == Game.StateMap["EndGame"]:
             self._view.DrawCurrentPlayer(self._players[self._current_player_index])
             if self._state == Game.StateMap["Playing"] and self._players[self._current_player_index].IsComputer():
-                action, position = self._players[self._current_player_index].ComputerAction(
+                action, position = self._players[self._current_player_index].GetComputerAction(
                     self._gridManager.GetGrids())
             else:
                 action, position = self._view.GePlayerActionPosition()
@@ -92,7 +92,6 @@ class Game(object):
                 continue
             elif action == View.PlayerAction["Replay"]:
                 self._initGame(self._width, self._height)
-                self._view.RefreshView(self._gridManager.GetGrids(), self._players)
                 continue
 
             if self._state == Game.StateMap["WaitingReplay"]:
