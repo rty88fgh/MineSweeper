@@ -2,7 +2,7 @@
 from Game import Game
 
 
-def GetPlayerAnswer(question, default_value=None, is_num=True):
+def _getPlayerAnswer(question, default_value=None, is_num=True):
     while True:
         try:
             ans = raw_input(question)
@@ -17,9 +17,9 @@ def GetPlayerAnswer(question, default_value=None, is_num=True):
 
 
 if __name__ == '__main__':
-    width_count = GetPlayerAnswer("Please enter width count (default: 10):", 10)
-    height_count = GetPlayerAnswer("Please enter height count (default: 10):", 10)
-    mine_count = GetPlayerAnswer("Please enter mine count (default: 9):", 9)
+    width_count = _getPlayerAnswer("Please enter width count (default: 10):", 10)
+    height_count = _getPlayerAnswer("Please enter height count (default: 10):", 10)
+    mine_count = _getPlayerAnswer("Please enter mine count (default: 9):", 9)
 
     if width_count * height_count < mine_count :
         print "mine count is not more than grid count!!"

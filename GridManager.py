@@ -8,9 +8,6 @@ class GridManager(object):
         self._mines_grid = []
         self._initGrids(width, height)
 
-    def GetGrids(self):
-        return self._grids
-
     def _initGrids(self, width, height):
         self._width = width
         self._height = height
@@ -45,6 +42,35 @@ class GridManager(object):
                 g["MineCount"] += 1
             mine_count += 1
 
+    def _calcScore(self, grid, is_clicked):
+
+        if grid is None:
+            return 0
+
+        flagCorrect = 50
+        flagError = -75
+        clickMine = -250
+
+        score = 0
+        if is_clicked:
+            score += clickMine if grid["IsMine"] else grid["MineCount"]
+        else:
+            score += flagCorrect if grid["IsMine"] else flagError
+
+        return score
+
+    def _getAdjacentGrids(self, grid):
+        relatedPosition = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        eightGrids = []
+        for i in range(len(relatedPosition)):
+            item = self._grids.get((grid["X"] + relatedPosition[i][0], grid["Y"] + relatedPosition[i][1]), None)
+            if item is not None:
+                eightGrids.append(item)
+
+        return eightGrids
+
+    def GetGrids(self):
+        return self._grids
 
     def RevealGrid(self, position):
         grid = self._grids.get(position, None)
@@ -86,35 +112,3 @@ class GridManager(object):
                 if not self._grids[(x, y)]["IsClicked"]:
                     return False
         return True
-
-    def _calcScore(self, grid, is_clicked):
-
-        if grid is None:
-            return 0
-
-        flagCorrect = "FlagCorrect"
-        flagError = "FlagError"
-        clickMine = "MineError"
-        scoreMap = {
-            flagCorrect: 50,
-            flagError: -75,
-            clickMine: -250
-        }
-
-        score = 0
-        if is_clicked:
-            score += scoreMap[clickMine] if grid["IsMine"] else grid["MineCount"]
-        else:
-            score += scoreMap[flagCorrect] if grid["IsMine"] else scoreMap[flagError]
-
-        return score
-
-    def _getAdjacentGrids(self, grid):
-        relatedPosition = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
-        eightGrids = []
-        for i in range(len(relatedPosition)):
-            item = self._grids.get((grid["X"] + relatedPosition[i][0], grid["Y"] + relatedPosition[i][1]), None)
-            if item is not None:
-                eightGrids.append(item)
-
-        return eightGrids

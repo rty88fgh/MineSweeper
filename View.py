@@ -32,16 +32,12 @@ class View(object):
         "Grid": pygame.image.load("Sprites/Grid.png"),
         "Gameover": pygame.image.load("Sprites/gameover.png")
     }
-    PlayerAction = {
-        "ClickGrid": "ClickGrid",
-        "Flag": "Flag",
-        "Replay": "Replay",
-        "Quit": "Quit",
-    }
-    ButtonType = {
-        "LeftButton": 1,
-        "RightButton": 3,
-    }
+    ClickGrid = "ClickGrid"
+    Flag = "Flag"
+    Replay = "Replay"
+    Quit = "Quit"
+    LeftButton = 1
+    RightButton = 3
 
     def __init__(self, nGrid_width_count, nGrid_height_count):
         pygame.init()
@@ -121,20 +117,20 @@ class View(object):
             try:
                 for event in pygame.event.get():
                     if event.type == pygame.QUIT:
-                        return View.PlayerAction["Quit"], None
+                        return View.Quit, None
                     elif event.type == pygame.MOUSEBUTTONUP:
                         if self._smile_rect.collidepoint(event.pos):
-                            return View.PlayerAction["Replay"], None
+                            return View.Replay, None
 
                         position = self.GetClickedPosition(event)
                         if position is None:
                             continue
-                        elif event.button == View.ButtonType["LeftButton"]:
-                            return View.PlayerAction["ClickGrid"], position
-                        elif event.button == View.ButtonType["RightButton"]:
-                            return View.PlayerAction["Flag"], position
+                        elif event.button == View.LeftButton:
+                            return View.ClickGrid, position
+                        elif event.button == View.RightButton:
+                            return View.Flag, position
             except KeyboardInterrupt:
-                return View.PlayerAction["Quit"], None
+                return View.Quit, None
 
     def GetClickedPosition(self, event):
         for position, rect in self._grids.items():
