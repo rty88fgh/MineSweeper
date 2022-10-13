@@ -14,23 +14,23 @@ class View(object):
     SmileHeight = 50
     ScoreMaxRow = 15
     ElementDict = {
-        0: pygame.image.load("Sprites/empty.png"),
-        1: pygame.image.load("Sprites/grid1.png"),
-        2: pygame.image.load("Sprites/grid2.png"),
-        3: pygame.image.load("Sprites/grid3.png"),
-        4: pygame.image.load("Sprites/grid4.png"),
-        5: pygame.image.load("Sprites/grid5.png"),
-        6: pygame.image.load("Sprites/grid6.png"),
-        7: pygame.image.load("Sprites/grid7.png"),
-        8: pygame.image.load("Sprites/grid8.png"),
-        "Mine": pygame.image.load("Sprites/mine.png"),
-        "MineClicked": pygame.image.load("Sprites/mineClicked.png"),
-        "MineFalse": pygame.image.load("Sprites/mineFalse.png"),
-        "Flag": pygame.image.load("Sprites/flag.png"),
-        "Smile": pygame.image.load("Sprites/smile.png"),
-        "Win": pygame.image.load("Sprites/win.png"),
-        "Grid": pygame.image.load("Sprites/Grid.png"),
-        "Gameover": pygame.image.load("Sprites/gameover.png")
+        0: pygame.image.load("Sprite/empty.png"),
+        1: pygame.image.load("Sprite/grid1.png"),
+        2: pygame.image.load("Sprite/grid2.png"),
+        3: pygame.image.load("Sprite/grid3.png"),
+        4: pygame.image.load("Sprite/grid4.png"),
+        5: pygame.image.load("Sprite/grid5.png"),
+        6: pygame.image.load("Sprite/grid6.png"),
+        7: pygame.image.load("Sprite/grid7.png"),
+        8: pygame.image.load("Sprite/grid8.png"),
+        "Mine": pygame.image.load("Sprite/mine.png"),
+        "MineClicked": pygame.image.load("Sprite/mineClicked.png"),
+        "MineFalse": pygame.image.load("Sprite/mineFalse.png"),
+        "Flag": pygame.image.load("Sprite/flag.png"),
+        "Smile": pygame.image.load("Sprite/smile.png"),
+        "Win": pygame.image.load("Sprite/win.png"),
+        "Grid": pygame.image.load("Sprite/Grid.png"),
+        "Gameover": pygame.image.load("Sprite/gameover.png")
     }
     ClickGrid = "ClickGrid"
     Flag = "Flag"
@@ -122,7 +122,7 @@ class View(object):
                         if self._smile_rect.collidepoint(event.pos):
                             return View.Replay, None
 
-                        position = self.GetClickedPosition(event)
+                        position = self._getClickedPosition(event)
                         if position is None:
                             continue
                         elif event.button == View.LeftButton:
@@ -131,11 +131,6 @@ class View(object):
                             return View.Flag, position
             except KeyboardInterrupt:
                 return View.Quit, None
-
-    def GetClickedPosition(self, event):
-        for position, rect in self._grids.items():
-            if rect.collidepoint(event.pos):
-                return position
 
     def DrawWin(self, win_player_name):
         self._display.blit(View.ElementDict["Win"], self._smile_rect)  # smile change to win
@@ -149,3 +144,8 @@ class View(object):
 
     def CloseWindows(self):
         pygame.quit()
+
+    def _getClickedPosition(self, event):
+        for position, rect in self._grids.items():
+            if rect.collidepoint(event.pos):
+                return position

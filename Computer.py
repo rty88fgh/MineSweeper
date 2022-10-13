@@ -8,7 +8,7 @@ class Computer(Player):
     def __init__(self, name):
         super(Computer, self).__init__(name, True)
 
-    def GetComputerAction(self, grids):
+    def GetComputerActionPosition(self, grids):
         set_flag = []
         must_not_mine = []
         unknown_girds = []
@@ -58,10 +58,12 @@ class Computer(Player):
             for grid in have_mine_count_grid:
                 adjacent_grids = grid["AdjacentGrids"]
                 not_clicked = [g for g in adjacent_grids if not g["IsClicked"]]
-                clicked_grid_count = len(adjacent_grids) - len(not_clicked)
                 # all grids were clicked
                 if len(not_clicked) == 0:
                     continue
+
+                clicked_grid_count = len(adjacent_grids) - len(not_clicked)
+
                 is_mine_clicked = [g for g in adjacent_grids if g["IsMine"] and g["IsClicked"]]
                 probability = float(grid["MineCount"] - len(is_mine_clicked)) / float(
                     len(adjacent_grids) - clicked_grid_count)
@@ -75,4 +77,4 @@ class Computer(Player):
             nonclicked_grid = [pair for pair in probability_dict.items()]
             nonclicked_grid.sort(key=lambda p: p[1])
             print nonclicked_grid[0]
-            return Flag if nonclicked_grid[0][1] == float(1) else ClickGrid, nonclicked_grid[0][0]
+            return (Flag if nonclicked_grid[0][1] == float(1) else ClickGrid), nonclicked_grid[0][0]

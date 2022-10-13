@@ -7,11 +7,16 @@ from View import View
 
 
 class Game(object):
+    STATE = ["InitGrid", "WaitingPlayer"]
     InitGrid = "InitGrid"
     WaitingPlayer = "WaitingPlayer"
     Playing = "Playing"
     WaitingReplay = "WaitingReplay"
     EndGame = "EndGame"
+
+    def setState(self, value, fromState):
+        if value not in Game.STATE:
+            pass
 
     def __init__(self, width, height, mine_count):
         self._players = []
@@ -48,8 +53,6 @@ class Game(object):
         if score == 0:
             return
 
-        assert score != []
-
         self._addPlayerScore(score)
         self._adjustPlayerSequence()
 
@@ -76,10 +79,12 @@ class Game(object):
     def Run(self):
         self._join(Player("Player1"))
         self._join(Computer("Computer"))
+        # getState
         while not self._state == Game.EndGame:
             self._view.DrawCurrentPlayer(self._players[self._current_player_index])
+
             if self._state == Game.Playing and self._players[self._current_player_index].IsComputer():
-                action, position = self._players[self._current_player_index].GetComputerAction(
+                action, position = self._players[self._current_player_index].GetComputerActionPosition(
                     self._gridManager.GetGrids())
             else:
                 action, position = self._view.GePlayerActionPosition()
@@ -97,3 +102,7 @@ class Game(object):
 
             if action == View.Flag or action == View.ClickGrid:
                 self._processPlayerAction(action, position)
+
+    def EndGame(self):
+        self._view.CloseWindows()
+        self._state = Game.EndGame

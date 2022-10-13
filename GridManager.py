@@ -3,6 +3,10 @@ import random
 
 
 class GridManager(object):
+    FLAGCORRECT = 50
+    flagError = -75
+    clickMine = -250
+
     def __init__(self, width, height, mine_count):
         self._mine_count = mine_count
         self._mines_grid = []
@@ -21,7 +25,7 @@ class GridManager(object):
                     "IsFlag": False,
                     "IsMineClicked": False,
                     "MineCount": 0,
-                    "IsClicked": False,
+                    "IsClicked": False,  # IsOpen
                     "AdjacentGrids": []
                 }
 
@@ -32,7 +36,7 @@ class GridManager(object):
         # Generate mine
         mine_count = 0
         while mine_count < self._mine_count:
-            grid = self._grids[random.randint(0, self._width - 1), random.randint(0, self._width - 1)]
+            grid = self._grids[random.randint(0, self._width - 1), random.randint(0, self._height - 1)]
             if grid["IsMine"]:
                 continue
             grid["IsMine"] = True
@@ -43,19 +47,14 @@ class GridManager(object):
             mine_count += 1
 
     def _calcScore(self, grid, is_clicked):
-
         if grid is None:
             return 0
 
-        flagCorrect = 50
-        flagError = -75
-        clickMine = -250
-
         score = 0
         if is_clicked:
-            score += clickMine if grid["IsMine"] else grid["MineCount"]
+            score += GridManager.clickMine if grid["IsMine"] else grid["MineCount"]
         else:
-            score += flagCorrect if grid["IsMine"] else flagError
+            score += GridManager.FLAGCORRECT if grid["IsMine"] else GridManager.flagError
 
         return score
 
@@ -107,8 +106,7 @@ class GridManager(object):
         return self._calcScore(grid, False)
 
     def IsAllGridsClicked(self):
-        for x in range(self._width):
-            for y in range(self._height):
-                if not self._grids[(x, y)]["IsClicked"]:
-                    return False
+        for grid in self._grids.values():
+            if not grid["IsClicked"]:
+                return False
         return True

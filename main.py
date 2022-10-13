@@ -21,7 +21,7 @@ if __name__ == '__main__':
     height_count = _getPlayerAnswer("Please enter height count (default: 10):", 10)
     mine_count = _getPlayerAnswer("Please enter mine count (default: 9):", 9)
 
-    if width_count * height_count < mine_count :
+    if width_count * height_count < mine_count:
         print "mine count is not more than grid count!!"
         exit(1)
 
