@@ -40,6 +40,8 @@ class View(object):
     RightButton = 3
 
     def __init__(self, nGrid_width_count, nGrid_height_count):
+        if nGrid_width_count == 0 or nGrid_width_count == 0:
+            return
         pygame.init()
         pygame.display.set_caption("MineSweeper")  # S Set the caption of window
         self._display_width = View.GridSize * nGrid_width_count + View.Border * 2 + View.ScoreWidth  # Display width
@@ -75,18 +77,18 @@ class View(object):
                            View.TopBorder + grid["Y"] * View.GridSize, View.GridSize, View.GridSize)
 
         if grid["IsFlag"]:
-            if not grid["IsMine"] and grid["IsClicked"]:
+            if not grid["IsMine"] and grid["IsOpen"]:
                 self._display.blit(View.ElementDict["MineFalse"], rect)
             else:
                 self._display.blit(View.ElementDict["Flag"], rect)
         elif grid["IsMine"]:
             if grid["IsMineClicked"]:
                 self._display.blit(View.ElementDict["MineClicked"], rect)
-            elif grid["IsClicked"]:
+            elif grid["IsOpen"]:
                 self._display.blit(View.ElementDict["Mine"], rect)
             else:
                 self._display.blit(View.ElementDict["Grid"], rect)
-        elif not grid["IsClicked"]:
+        elif not grid["IsOpen"]:
             self._display.blit(View.ElementDict["Grid"], rect)
         else:
             self._display.blit(View.ElementDict[grid["MineCount"]], rect)
@@ -144,6 +146,19 @@ class View(object):
 
     def CloseWindows(self):
         pygame.quit()
+
+    def GetPlayerAnswer(self, question, default_value=None, is_num=True):
+        while True:
+            try:
+                ans = raw_input(question)
+                if len(ans) == 0 and default_value is not None:
+                    return default_value
+                if is_num:
+                    return int(ans)
+                else:
+                    return ans
+            except:
+                print "Please enter valid value!"
 
     def _getClickedPosition(self, event):
         for position, rect in self._grids.items():

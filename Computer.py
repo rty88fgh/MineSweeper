@@ -1,14 +1,12 @@
 import gevent
 
-from GridManager import GridManager
 from Player import Player
-
 
 class Computer(Player):
     def __init__(self, name):
         super(Computer, self).__init__(name, True)
 
-    def GetComputerActionPosition(self, grids):
+    def GetComputerActionPosition(self, grids, getAdjacentGridsFunc):
         set_flag = []
         must_not_mine = []
         unknown_girds = []
@@ -18,26 +16,26 @@ class Computer(Player):
         Flag = "Flag"
 
         for grid in grids.values():
-            adjacent_grids = grid["AdjacentGrids"]
-            if grid["IsClicked"]:
-                if len([g for g in adjacent_grids if g["IsClicked"]]) == len(adjacent_grids):
+            adjacent_grids = getAdjacentGridsFunc(grid)
+            if grid["IsOpen"]:
+                if len([g for g in adjacent_grids if g["IsOpen"]]) == len(adjacent_grids):
                     continue
 
-                is_click_or_flag_mine = [g for g in adjacent_grids if g["IsMine"] and (g["IsFlag"] or g["IsClicked"])]
+                is_click_or_flag_mine = [g for g in adjacent_grids if g["IsMine"] and (g["IsFlag"] or g["IsOpen"])]
                 if len(is_click_or_flag_mine) - grid["MineCount"] == 0 and grid["MineCount"] > 0:
-                    extend_list = [g for g in adjacent_grids if not g["IsClicked"]]
+                    extend_list = [g for g in adjacent_grids if not g["IsOpen"]]
                     must_not_mine.extend(extend_list)
 
-                nonClicked_grids = [g for g in adjacent_grids if not g["IsClicked"]]
+                nonClicked_grids = [g for g in adjacent_grids if not g["IsOpen"]]
                 if grid["MineCount"] - len(is_click_or_flag_mine) == len(nonClicked_grids):
                     set_flag.extend(nonClicked_grids)
 
             else:
                 # find flag
-                if len([g for g in adjacent_grids if g["IsClicked"] and not g["IsMine"]]) == len(adjacent_grids):
+                if len([g for g in adjacent_grids if g["IsOpen"] and not g["IsMine"]]) == len(adjacent_grids):
                     set_flag.append(grid)
 
-                if len([g for g in adjacent_grids if not g["IsClicked"]]) == len(adjacent_grids):
+                if len([g for g in adjacent_grids if not g["IsOpen"]]) == len(adjacent_grids):
                     unknown_girds.append(grid)
 
         if len(set_flag) > 0:
@@ -53,18 +51,18 @@ class Computer(Player):
             return ClickGrid, (select_grid["X"], select_grid["Y"])
         else:
             # calculate probability
-            have_mine_count_grid = [g for g in grids if g["IsClicked"] and g["MineCount"] > 0]
+            have_mine_count_grid = [g for g in grids if g["IsOpen"] and g["MineCount"] > 0]
             probability_dict = {}
             for grid in have_mine_count_grid:
-                adjacent_grids = grid["AdjacentGrids"]
-                not_clicked = [g for g in adjacent_grids if not g["IsClicked"]]
+                adjacent_grids = getAdjacentGridsFunc(grid)
+                not_clicked = [g for g in adjacent_grids if not g["IsOpen"]]
                 # all grids were clicked
                 if len(not_clicked) == 0:
                     continue
 
                 clicked_grid_count = len(adjacent_grids) - len(not_clicked)
 
-                is_mine_clicked = [g for g in adjacent_grids if g["IsMine"] and g["IsClicked"]]
+                is_mine_clicked = [g for g in adjacent_grids if g["IsMine"] and g["IsOpen"]]
                 probability = float(grid["MineCount"] - len(is_mine_clicked)) / float(
                     len(adjacent_grids) - clicked_grid_count)
                 for ag in not_clicked:
