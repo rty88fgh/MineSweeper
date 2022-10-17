@@ -1,0 +1,12 @@
+import falcon as falcon
+
+from Game import Game
+
+game = Game()
+app = application = falcon.API()
+app.add_route("/Join", game, suffix="Join")
+app.add_route("/ConfigGame", game, suffix="ConfigGame")
+app.add_route("/Start", game, suffix="Start")
+app.add_route("/Action", game, suffix="Action")
+app.add_route("/GameInfo", game, suffix="GameInfo")
+app.add_route("/Replay", game, suffix="Replay")
