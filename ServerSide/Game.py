@@ -14,15 +14,7 @@ class Game(object):
     PlayerInfoFile = "PlayerInfo.json"
 
     def __init__(self):
-        self._players = []
-        self._gridManager = None
-        self._state = Game.STATE[0]
-        self._currentPlayer = 0
-        self._mineCount = 0
-        self._width = 0
-        self._height = 0,
-        self._scoreMsg = {}
-        self._lastUpdateTime = 0
+        self._initGame()
 
     def _setState(self, toState, fromState=None):
         if fromState is None:
@@ -36,6 +28,7 @@ class Game(object):
                 (fromState == self._getSTATE("Playing") and toState == self._getSTATE("WaitingReplay")) or
                 (fromState == self._getSTATE("WaitingReplay") and toState == self._getSTATE("EndGame")) or
                 (fromState == self._getSTATE("WaitingReplay") and toState == self._getSTATE("InitGrid")) or
+                (fromState == self._getSTATE("WaitingReplay") and toState == self._getSTATE("Init")) or
                 (fromState == self._getSTATE("Playing") and toState == self._getSTATE("InitGrid"))):
             return
         self._state = toState
@@ -69,12 +62,6 @@ class Game(object):
         self._players.append(player)
 
         self._setRespMsg(resp)
-
-    def _getPlayer(self, name):
-        fp = open(Game.PlayerInfoFile, "r")
-        text = fp.read()
-        players = json.loads(text)
-        return Player(next((p["name"] for p in players if p["name"] == name), None))
 
     def on_post_ConfigGame(self, req, resp):
         if not self._getState() in [self._getSTATE("Init"), self._getSTATE("WaitingReplay")]:
@@ -122,7 +109,7 @@ class Game(object):
         resp.media = json.dumps({
             "grids": None if self._getState() == self._getSTATE("Init") else self._gridManager.GetGrids().values(),
             "players": [p.Serialize() for p in self._players],
-            "current": self._players[self._currentPlayer].GetName(),
+            "current": None if len(self._players) == 0 else self._players[self._currentPlayer].GetName(),
             "scoreMsg": scoreMsg,
             "status": self._state,
             "width": self._width,
@@ -137,6 +124,46 @@ class Game(object):
             self._setRespMsg(resp, "It cannot replay game")
             return
         self._startGame()
+
+    def on_post_InitGame(self, req, resp):
+        if self._getState() != self._getSTATE("WaitingReplay"):
+            self._setRespMsg(resp, "It cannot init game")
+            return
+
+        print "Start to init game..."
+        self._initGame()
+        self._setRespMsg(resp)
+
+    def on_post_Register(self, req, resp):
+        fp = open(Game.PlayerInfoFile, "r")
+        players = json.loads(fp.read())
+        name = req.media.get("name", None)
+        if name is not None and name in [p["name"] for p in players]:
+            self._setRespMsg(resp, "{} is duplicate.".format(name))
+            return
+
+        players.append({
+            "name": name
+        })
+        fp = open(Game.PlayerInfoFile, "w+")
+        fp.write(json.dumps(players))
+
+    def _initGame(self):
+        self._players = []
+        self._gridManager = None
+        self._state = Game.STATE[0]
+        self._currentPlayer = 0
+        self._mineCount = 0
+        self._width = 0
+        self._height = 0,
+        self._scoreMsg = {}
+        self._lastUpdateTime = 0
+
+    def _getPlayer(self, name):
+        fp = open(Game.PlayerInfoFile, "r")
+        text = fp.read()
+        players = json.loads(text)
+        return Player(next((p["name"] for p in players if p["name"] == name), None))
 
     def _processPlayerAction(self, action, position):
         if not self._gridManager.IsValidGrid(position):
