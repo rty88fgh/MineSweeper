@@ -116,7 +116,6 @@ class View(object):
         except KeyboardInterrupt:
             return View.Quit, None
 
-
     def DrawWin(self, winPlayerName):
         self._display.blit(View.ElementDict["Win"], self._smile_rect)  # smile change to win
         win_str = "{} Win!!!".format(winPlayerName)
@@ -153,6 +152,17 @@ class View(object):
                                        View.GridSize,
                                        View.GridSize)
         self._grids = {}
+
+    def ConsoleMenu(self, menuList):
+        while True:
+            for m in menuList:
+                print "{}) {}".format(menuList.index(m), m)
+
+            ans = self.GetPlayerAnswer("Enter Choice: ", convertFunc=int)
+            if ans < len(menuList):
+                return ans
+
+            print "Error choice. Please choice again"
 
     def _getClickedPosition(self, event):
         for position, rect in self._grids.items():
