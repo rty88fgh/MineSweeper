@@ -119,6 +119,7 @@ class Game(object):
             "winner": None if winner is None else winner,
             "lastUpdateTime": self._lastUpdateTime
         })
+        resp.set_header("Access-Control-Allow-Origin", "*")
 
     def on_post_Replay(self, req, resp):
         if not (self._getState() == "WaitingReplay" or

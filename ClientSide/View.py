@@ -61,26 +61,26 @@ class View(object):
         pygame.display.update()
 
     def DrawGrid(self, grid):
-        rect = pygame.Rect(View.Border + grid["X"] * View.GridSize,
-                           View.TopBorder + grid["Y"] * View.GridSize, View.GridSize, View.GridSize)
+        rect = pygame.Rect(View.Border + grid["x"] * View.GridSize,
+                           View.TopBorder + grid["y"] * View.GridSize, View.GridSize, View.GridSize)
 
-        if grid["IsFlag"]:
-            if not grid["IsMine"] and grid["IsOpen"]:
+        if grid["isFlag"]:
+            if not grid["isMine"] and grid["isOpen"]:
                 self._display.blit(View.ElementDict["MineFalse"], rect)
             else:
                 self._display.blit(View.ElementDict["Flag"], rect)
-        elif grid["IsMine"]:
-            if grid["IsMineClicked"]:
+        elif grid["isMine"]:
+            if grid["isMineClicked"]:
                 self._display.blit(View.ElementDict["MineClicked"], rect)
-            elif grid["IsOpen"]:
+            elif grid["isOpen"]:
                 self._display.blit(View.ElementDict["Mine"], rect)
             else:
                 self._display.blit(View.ElementDict["Grid"], rect)
-        elif not grid["IsOpen"]:
+        elif not grid["isOpen"]:
             self._display.blit(View.ElementDict["Grid"], rect)
         else:
-            self._display.blit(View.ElementDict[grid["MineCount"]], rect)
-        self._grids[(grid["X"], grid["Y"])] = rect
+            self._display.blit(View.ElementDict[grid["mineCount"]], rect)
+        self._grids[(grid["x"], grid["y"])] = rect
 
     def DrawPlayerGetScore(self, scoreTexts):
         for i in range(View.ScoreMaxRow):
