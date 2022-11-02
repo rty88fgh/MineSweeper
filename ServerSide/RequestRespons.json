@@ -1,0 +1,93 @@
+{
+  "Login": {
+    "Request": {
+      "name": "string",
+      "password": "md5hash"
+    },
+    "Response": {
+      "isSuccess": "boolean",
+      "message": "string",
+      "token": "string"
+    }
+  },
+  "Register": {
+    "Request": {
+      "name": "string",
+      "password": "md5hash"
+    },
+    "Response": {
+      "isSuccess": "boolean",
+      "message": "string"
+    }
+  },
+  "ConfigGame": {
+    "Request": {
+      "mineCount": "number",
+      "width": "number",
+      "height": "number",
+      "computerCount": "number"
+    },
+    "Response": {
+      "isSuccess": "boolean",
+      "message": "string"
+    }
+  },
+  "Start": {
+    "Request": {
+    },
+    "Response": {
+      "isSuccess": "boolean",
+      "message": "string"
+    }
+  },
+  "Action": {
+    "Request": {
+      "x": "number",
+      "y": "number",
+      "action": "string"
+    },
+    "Response": {
+      "isSuccess": "boolean",
+      "message": "string"
+    }
+  },
+  "Replay": {
+    "Request": {
+    },
+    "Response": {
+      "isSuccess": "boolean",
+      "message": "string"
+    }
+  },
+  "InitGame": {
+    "Request": {
+    },
+    "Response": {
+      "isSuccess": "boolean",
+      "message": "string"
+    }
+  },
+  "GameInfo": {
+    "Request": {
+    },
+    "Response": {
+      "grids": {
+        "x": "number",
+        "y": "number",
+        "isMine": "boolean",
+        "isFlag": "boolean",
+        "isMineClicked": "boolean",
+        "mineCount": "number",
+        "isOpen": "boolean"
+      },
+      "players": "string[]",
+      "current": "string",
+      "scoreMsg": "string[]",
+      "status": "string",
+      "width": "number",
+      "height": "number",
+      "winner": "string",
+      "lastUpdateTime": "number"
+    }
+  }
+}

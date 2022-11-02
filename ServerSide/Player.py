@@ -35,5 +35,6 @@ class Player(object):
             "score": self._score,
             "isComputer": self._isComputer
         }
+
     def _calcScore(self, value):
         self._score += value

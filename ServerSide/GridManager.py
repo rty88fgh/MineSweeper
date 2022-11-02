@@ -46,10 +46,12 @@ class GridManager(object):
             return 0
 
         score = 0
+        isMine = grid["isMine"]
+
         if is_clicked:
-            score += GridManager.CLICK_MINE if grid["isMine"] else grid["mineCount"]
+            score += GridManager.CLICK_MINE if isMine else grid["mineCount"]
         else:
-            score += GridManager.FLAG_CORRECT if grid["isMine"] else GridManager.FLAG_ERROR
+            score += GridManager.FLAG_CORRECT if isMine else GridManager.FLAG_ERROR
 
         return score
 
@@ -69,15 +71,18 @@ class GridManager(object):
     def RevealGrid(self, position):
         grid = self._grids.get(position, None)
 
+        isMine = grid["isMine"]
+        mineCount = grid["mineCount"]
+
         grid["isOpen"] = True
 
         if grid["isFlag"]:
             grid["isFlag"] = False
 
-        if not grid["isMine"] and not grid["mineCount"] == 0:
+        if not isMine and not mineCount == 0:
             return self._calcScore(grid, True)
 
-        if grid["isMine"]:
+        if isMine:
             grid["isMineClicked"] = True
             return self._calcScore(grid, True)
 
@@ -105,4 +110,3 @@ class GridManager(object):
             return False
 
         return not grid["isOpen"]
-

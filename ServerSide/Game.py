@@ -18,6 +18,7 @@ class Game(object):
         self._mineCount = 0
         self._width = 0
         self._height = 0
+        self._computerCount = 0
 
     def _setState(self, toState, fromState=None):
         if fromState is None:
@@ -39,22 +40,22 @@ class Game(object):
     def _getState(self):
         return self._state
 
-    def on_post_Join(self, req, resp):
+    def on_post_Login(self, req, resp):
         if not self._getState() == "Init":
-            self._setRespMsg(resp, False, msg="It cannot join the player")
+            self._setRespMsg(resp, False, msg="Failed to Login. Game status: {}".format(self._getState()))
             return
         name = req.media.get("name", None)
         if name is None:
             resp.status = 400
             return
 
-        if name in [p.GetName() for p in self._players]:
-            self._setRespMsg(resp, True, msg="{} has joined the game.".format(name))
-            return
-
-        isSuccess = self._playerManager.IsLoginSuccess(name, req.media.get("pwd", None))
+        isSuccess, token = self._playerManager.IsLoginSuccess(name, req.media.get("pwd", None))
         if not isSuccess:
             resp.status = 401
+            return
+
+        if name in [p.GetName() for p in self._players]:
+            self._setRespMsg(resp, True, msg="{} has logon the game.".format(name), token=token)
             return
 
         player = self._playerManager.GetPlayerInfo(name)
@@ -62,9 +63,14 @@ class Game(object):
         print "{} join the game".format(name)
         self._players.append(player)
 
-        self._setRespMsg(resp, True, token="")
+        self._setRespMsg(resp, True, token=token)
 
     def on_post_ConfigGame(self, req, resp):
+        isValid, player = self._isValidPlayer(req, resp)
+
+        if not isValid:
+            return
+
         if not self._getState() in ["Init", "WaitingReplay"]:
             self._setRespMsg(resp, False, msg="It cannot config game")
             return
@@ -73,14 +79,17 @@ class Game(object):
             self._mineCount = int(req.media["mineCount"])
             self._width = int(req.media["width"])
             self._height = int(req.media["height"])
-            computerCount = int(req.media.get("computerCount", None))
-            if computerCount is not None:
-                for c in range(computerCount):
-                    self._players.append(Computer("Computer{}".format(str(c))))
+            self._computerCount = int(req.media.get("computerCount", None))
+
         except ValueError:
             self._setRespMsg(resp, False, msg="It is failed to convert type")
 
-    def on_get_Start(self, req, resp):
+    def on_post_Start(self, req, resp):
+        isValid, player = self._isValidPlayer(req, resp)
+
+        if not isValid:
+            return
+
         if not self._getState() in ["Init", "WaitingReplay"]:
             self._setRespMsg(resp, False, msg="It cannot start game")
             return
@@ -91,12 +100,17 @@ class Game(object):
         self._setRespMsg(resp, True)
 
     def on_post_Action(self, req, resp):
+        isValid, player = self._isValidPlayer(req, resp)
+
+        if not isValid:
+            return
+
         if not self._getState() == "Playing":
             self._setRespMsg(resp, False, msg="It cannot set click grid")
             return
-        requestName = req.media.get("name", None)
-        if not requestName == self._players[self._currentPlayer].GetName():
-            self._setRespMsg(resp, False, msg="It is not {} turn".format(requestName))
+
+        if not player == self._players[self._currentPlayer].GetName():
+            self._setRespMsg(resp, False, msg="It is not {} turn".format(player))
             return
 
         x = req.media["x"]
@@ -104,6 +118,7 @@ class Game(object):
         action = req.media["action"]
 
         self._processPlayerAction(action, (x, y))
+        self._setRespMsg(resp, True)
 
     def on_get_GameInfo(self, req, resp):
         scoreMsg = [p[1] for p in sorted(self._scoreMsg.items(), key=lambda pair: pair[0])]
@@ -119,9 +134,13 @@ class Game(object):
             "winner": None if winner is None else winner,
             "lastUpdateTime": self._lastUpdateTime
         })
-        resp.set_header("Access-Control-Allow-Origin", "*")
 
     def on_post_Replay(self, req, resp):
+        isValid, player = self._isValidPlayer(req, resp)
+
+        if not isValid:
+            return
+
         if not (self._getState() == "WaitingReplay" or
                 self._getState() == "Playing"):
             self._setRespMsg(resp, False, msg="It cannot replay game")
@@ -206,7 +225,7 @@ class Game(object):
             rtn[k] = v
 
         resp.media = json.dumps(rtn)
-        if len(msg) != 0:
+        if msg is not None and len(msg) != 0:
             print msg
 
     def _startGame(self):
@@ -219,10 +238,7 @@ class Game(object):
         self._setState("Playing")
         self._lastUpdateTime = time.time()
         self._scoreMsg = {}
-        if self._computerThread is None:
-            self._computerThread = threading.Thread(target=self._computerRun)
-            self._computerThread.setDaemon(True)
-            self._computerThread.start()
+        self._setupComputer()
 
     def _computerRun(self):
         while self._state not in ["Init", "EndGame"]:
@@ -231,7 +247,37 @@ class Game(object):
                 continue
             if not self._players[self._currentPlayer].IsComputer():
                 continue
-            action, pos = self._players[self._currentPlayer].GetActPos(self._gridManager.GetGrids(),
-                                                                       self._gridManager.GetAdjacentGrids)
+            action, pos = self._players[self._currentPlayer].ProcessAction()
             self._processPlayerAction(action, pos)
         self._computerThread = None
+
+    def _setupComputer(self):
+        if self._computerCount == 0:
+            return
+
+        self._players = [p for p in self._players if not p.IsComputer()]
+
+        for c in range(self._computerCount):
+            self._players.append(Computer("Computer{}".format(str(c)), self._gridManager))
+
+        if self._computerThread is None:
+            self._computerThread = threading.Thread(target=self._computerRun)
+            self._computerThread.setDaemon(True)
+            self._computerThread.start()
+
+    def _isValidPlayer(self, req, resp):
+        token = req.headers.get("Authorization".upper(), None)
+        if token is None:
+            resp.status = 401
+            return False, None
+
+        playerName = self._playerManager.VerifyToken(token)["name"]
+        if playerName is None:
+            resp.status = 401
+            return False, None
+        if playerName not in [p.GetName() for p in self._players]:
+            resp.status = 401
+            return False, None
+
+        return True, playerName
+

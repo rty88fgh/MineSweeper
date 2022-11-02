@@ -2,6 +2,7 @@ import json
 import gevent
 import requests
 from View import View
+import hashlib
 
 
 class Client(object):
@@ -11,11 +12,13 @@ class Client(object):
         self._view = View()
         self._playerName = ""
         self._lastUpdateTime = 0
+        self._token = None
+        self._hashAlgo = hashlib.md5()
 
     def Run(self):
         while True:
             print "===================="
-            menuAns = self._view.ConsoleMenu(["Register", "Join"])
+            menuAns = self._view.ConsoleMenu(["Register", "Login"])
             if menuAns == 0:
                 self._register()
             elif menuAns == 1 and self._login():
@@ -35,7 +38,6 @@ class Client(object):
                 gevent.sleep(1)
                 continue
 
-        gameInfo = json.loads(requests.get(Client.ServerUrl + "/GameInfo").json())
         self._view.InitPyGame(gameInfo["width"], gameInfo["height"], self._playerName)
         while not gameInfo["status"] == "EndGame":
             info = self._getRefreshViewParams()
@@ -59,15 +61,14 @@ class Client(object):
                 self._view.CloseWindows()
                 return
             elif action == View.Replay:
-                requests.post(Client.ServerUrl + "/Replay", {})
+                requests.post(Client.ServerUrl + "/Replay", {}, headers={"Authorization": self._token})
                 continue
 
             requests.post(Client.ServerUrl + "/Action", json.dumps({
                 "action": action,
                 "x": pos[0],
                 "y": pos[1],
-                "name": self._playerName,
-            }))
+            }), headers={"Authorization": self._token})
 
     def _convertBool(self, value):
         if str(value).lower() in ["y", "yes"]:
@@ -83,9 +84,10 @@ class Client(object):
     def _register(self):
         name = self._view.GetPlayerAnswer("What's your name?", isStr=True, defaultValue="Terry")
         pwd = self._view.GetPlayerAnswer("Password: ", isStr=True, defaultValue="1234")
+        self._hashAlgo.update(pwd)
         resp = json.loads(requests.post(Client.ServerUrl + "/Register", json.dumps({
             "name": name,
-            "pwd": pwd
+            "pwd": self._hashAlgo.hexdigest()
         })).json())
 
         if resp["isSuccess"]:
@@ -98,17 +100,26 @@ class Client(object):
     def _login(self):
         name = self._view.GetPlayerAnswer("What's your name?", isStr=True, defaultValue="Terry")
         pwd = self._view.GetPlayerAnswer("Password: ", isStr=True, defaultValue="1234")
-        resp = requests.post(Client.ServerUrl + "/Join", json.dumps({
+        self._hashAlgo.update(pwd)
+        resp = requests.post(Client.ServerUrl + "/Login", json.dumps({
             "name": name,
-            "pwd": pwd
+            "pwd": self._hashAlgo.hexdigest()
         }))
+        result = json.loads(resp.json()) if len(resp.content) > 0 else {}
+        msg = result.get("message", None)
+        isSuccess = bool(result.get("isSuccess", False))
         if resp.status_code == 200:
-            msg = json.loads(resp.json()).get("message", None) if len(resp.content) != 0 else None
-            if msg is not None:
-                print msg
-            self._playerName = name
-            print "{} join success".format(name)
-            return True
+            if not isSuccess:
+                print "Failed to login. Msg:{}".format(msg)
+                return
+            else:
+                if msg is not None:
+                    print msg
+
+                self._playerName = name
+                print "{} join success".format(name)
+                self._token = result.get("token")
+                return True
         elif resp.status_code == 401:
             print "Failed to login. Please try again."
         elif resp.status_code == 500:
@@ -122,15 +133,16 @@ class Client(object):
         widthCount = self._view.GetPlayerAnswer("Please enter width count (default: 10):", 10)
         heightCount = self._view.GetPlayerAnswer("Please enter height count (default: 10):", 10)
         mineCount = self._view.GetPlayerAnswer("Please enter mine count (default: 9):", 9)
-        computerCount= self._view.GetPlayerAnswer("Please enter computer count (default: 0):", 0)
+        computerCount = self._view.GetPlayerAnswer("Please enter computer count (default: 0):", 0)
         requests.post(Client.ServerUrl + "/ConfigGame", json.dumps({
             "width": widthCount,
             "height": heightCount,
             "mineCount": mineCount,
             "computerCount": computerCount
-        }))
+        }), headers={"Authorization": self._token})
         self._view.GetPlayerAnswer("It will start game when click enter...", isStr=True, defaultValue="")
-        resp = json.loads(requests.get(Client.ServerUrl + "/Start", {}).json())
+        resp = json.loads(
+            requests.post(Client.ServerUrl + "/Start", {}, headers={"Authorization": self._token}).json())
         if not resp["isSuccess"]:
             print resp["message"]
 
