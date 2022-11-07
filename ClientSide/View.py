@@ -61,26 +61,26 @@ class View(object):
         pygame.display.update()
 
     def DrawGrid(self, grid):
-        rect = pygame.Rect(View.Border + grid["x"] * View.GridSize,
-                           View.TopBorder + grid["y"] * View.GridSize, View.GridSize, View.GridSize)
+        rect = pygame.Rect(View.Border + grid["X"] * View.GridSize,
+                           View.TopBorder + grid["Y"] * View.GridSize, View.GridSize, View.GridSize)
 
-        if grid["isFlag"]:
-            if not grid["isMine"] and grid["isOpen"]:
+        if grid["IsFlag"]:
+            if not grid["IsMine"] and grid["IsOpen"]:
                 self._display.blit(View.ElementDict["MineFalse"], rect)
             else:
                 self._display.blit(View.ElementDict["Flag"], rect)
-        elif grid["isMine"]:
-            if grid["isMineClicked"]:
+        elif grid["IsMine"]:
+            if grid["IsMineClicked"]:
                 self._display.blit(View.ElementDict["MineClicked"], rect)
-            elif grid["isOpen"]:
+            elif grid["IsOpen"]:
                 self._display.blit(View.ElementDict["Mine"], rect)
             else:
                 self._display.blit(View.ElementDict["Grid"], rect)
-        elif not grid["isOpen"]:
+        elif not grid["IsOpen"]:
             self._display.blit(View.ElementDict["Grid"], rect)
         else:
-            self._display.blit(View.ElementDict[grid["mineCount"]], rect)
-        self._grids[(grid["x"], grid["y"])] = rect
+            self._display.blit(View.ElementDict[grid["MineCount"]], rect)
+        self._grids[(grid["X"], grid["Y"])] = rect
 
     def DrawPlayerGetScore(self, scoreTexts):
         for i in range(View.ScoreMaxRow):
@@ -97,7 +97,7 @@ class View(object):
         player_render = pygame.font.SysFont("Calibri", View.FontSize).render(player_text, True, (0, 0, 0))
         self._display.blit(player_render, (View.Border, View.Border))
 
-    def GeActionPosition(self):
+    def ProcessAction(self):
         try:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -108,11 +108,12 @@ class View(object):
 
                     position = self._getClickedPosition(event)
                     if position is None:
-                        continue
+                        return None, None
                     elif event.button == View.LeftButton:
                         return View.Click, position
                     elif event.button == View.RightButton:
                         return View.Flag, position
+            return None, None
         except KeyboardInterrupt:
             return View.Quit, None
 

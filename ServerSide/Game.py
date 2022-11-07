@@ -9,7 +9,7 @@ from PlayerManager import PlayerManager
 
 
 class Game(object):
-    STATE = ["Init", "InitGrid", "AdjustPlayer", "Playing", "WaitingReplay", "EndGame"]
+    STATE = ["Start", "InitGame", "Playing", "WaitingReplay", "End"]
 
     def __init__(self):
         self._initGame()
@@ -26,14 +26,13 @@ class Game(object):
 
         if toState not in Game.STATE or fromState not in Game.STATE:
             return
-        if not ((fromState == "Init" and toState == "InitGrid") or
-                (fromState == "InitGrid" and toState == "AdjustPlayer") or
-                (fromState == "AdjustPlayer" and toState == "Playing") or
+        if not ((fromState == "Start" and toState == "InitGame") or
+                (fromState == "InitGame" and toState == "Playing") or
                 (fromState == "Playing" and toState == "WaitingReplay") or
-                (fromState == "WaitingReplay" and toState == "EndGame") or
-                (fromState == "WaitingReplay" and toState == "InitGrid") or
-                (fromState == "WaitingReplay" and toState == "Init") or
-                (fromState == "Playing" and toState == "InitGrid")):
+                (fromState == "WaitingReplay" and toState == "End") or
+                (fromState == "WaitingReplay" and toState == "InitGame") or
+                (fromState == "WaitingReplay" and toState == "Start") or
+                (fromState == "Playing" and toState == "InitGame")):
             return
         self._state = toState
 
@@ -41,21 +40,27 @@ class Game(object):
         return self._state
 
     def on_post_Login(self, req, resp):
-        if not self._getState() == "Init":
+        if self._getState() == "End":
             self._setRespMsg(resp, False, msg="Failed to Login. Game status: {}".format(self._getState()))
             return
-        name = req.media.get("name", None)
+        name = req.media.get("Name", None)
         if name is None:
             resp.status = 400
             return
 
-        isSuccess, token = self._playerManager.IsLoginSuccess(name, req.media.get("pwd", None))
+        isSuccess, token = self._playerManager.IsLoginSuccess(name, req.media.get("Pwd", None))
         if not isSuccess:
             resp.status = 401
             return
 
+        currentPlayers = [p.GetName() for p in self._players]
+        if self._getState() != "Start" and name not in currentPlayers:
+            self._setRespMsg(resp, False,
+                             msg="The game has been started. Please init the game if you want to join game")
+            return
+
         if name in [p.GetName() for p in self._players]:
-            self._setRespMsg(resp, True, msg="{} has logon the game.".format(name), token=token)
+            self._setRespMsg(resp, True, msg="{} has logon the game.".format(name), Token=token)
             return
 
         player = self._playerManager.GetPlayerInfo(name)
@@ -63,7 +68,7 @@ class Game(object):
         print "{} join the game".format(name)
         self._players.append(player)
 
-        self._setRespMsg(resp, True, token=token)
+        self._setRespMsg(resp, True, Token=token)
 
     def on_post_ConfigGame(self, req, resp):
         isValid, player = self._isValidPlayer(req, resp)
@@ -71,16 +76,16 @@ class Game(object):
         if not isValid:
             return
 
-        if not self._getState() in ["Init", "WaitingReplay"]:
+        if not self._getState() in ["Start", "WaitingReplay"]:
             self._setRespMsg(resp, False, msg="It cannot config game")
             return
 
         try:
-            self._mineCount = int(req.media["mineCount"])
-            self._width = int(req.media["width"])
-            self._height = int(req.media["height"])
-            self._computerCount = int(req.media.get("computerCount", None))
-
+            self._mineCount = int(req.media["MineCount"])
+            self._width = int(req.media["Width"])
+            self._height = int(req.media["Height"])
+            self._computerCount = int(req.media.get("ComputerCount", None))
+            self._setRespMsg(resp, True)
         except ValueError:
             self._setRespMsg(resp, False, msg="It is failed to convert type")
 
@@ -90,7 +95,7 @@ class Game(object):
         if not isValid:
             return
 
-        if not self._getState() in ["Init", "WaitingReplay"]:
+        if not self._getState() in ["Start", "WaitingReplay"]:
             self._setRespMsg(resp, False, msg="It cannot start game")
             return
         if len(self._players) == 0:
@@ -99,40 +104,39 @@ class Game(object):
         self._startGame()
         self._setRespMsg(resp, True)
 
-    def on_post_Action(self, req, resp):
-        isValid, player = self._isValidPlayer(req, resp)
-
+    def on_post_Click(self, req, resp):
+        isValid, position = self._isValidPlayerAction(req, resp)
         if not isValid:
             return
 
-        if not self._getState() == "Playing":
-            self._setRespMsg(resp, False, msg="It cannot set click grid")
-            return
-
-        if not player == self._players[self._currentPlayer].GetName():
-            self._setRespMsg(resp, False, msg="It is not {} turn".format(player))
-            return
-
-        x = req.media["x"]
-        y = req.media["y"]
-        action = req.media["action"]
-
-        self._processPlayerAction(action, (x, y))
+        self._processPlayerAction("Click", position)
         self._setRespMsg(resp, True)
 
-    def on_get_GameInfo(self, req, resp):
+    def on_post_Flag(self, req, resp):
+        isValid, position = self._isValidPlayerAction(req, resp)
+        if not isValid:
+            return
+
+        self._processPlayerAction("Flag", position)
+        self._setRespMsg(resp, True)
+
+    def on_get_GetGameInfo(self, req, resp):
+        isValid, player = self._isValidPlayer(req, resp)
+        if not isValid:
+            return
+
         scoreMsg = [p[1] for p in sorted(self._scoreMsg.items(), key=lambda pair: pair[0])]
         winner = self._winner if self._getState() == "WaitingReplay" else None
         resp.media = json.dumps({
-            "grids": None if self._getState() == "Init" else self._gridManager.GetGrids().values(),
-            "players": [p.Serialize() for p in self._players],
-            "current": None if len(self._players) == 0 else self._players[self._currentPlayer].GetName(),
-            "scoreMsg": scoreMsg,
-            "status": self._state,
-            "width": self._width,
-            "height": self._height,
-            "winner": None if winner is None else winner,
-            "lastUpdateTime": self._lastUpdateTime
+            "Grids": None if self._getState() == "Start" else self._gridManager.GetGrids().values(),
+            "Players": [p.Serialize() for p in self._players],
+            "Current": None if len(self._players) == 0 else self._players[self._currentPlayer].GetName(),
+            "ScoreMsg": scoreMsg,
+            "Status": self._state,
+            "Width": self._width,
+            "Height": self._height,
+            "Winner": None if winner is None else winner,
+            "LastUpdateTime": self._lastUpdateTime
         })
 
     def on_post_Replay(self, req, resp):
@@ -146,6 +150,7 @@ class Game(object):
             self._setRespMsg(resp, False, msg="It cannot replay game")
             return
         self._startGame()
+        self._setRespMsg(resp, True)
 
     def on_post_InitGame(self, req, resp):
         if self._getState() != "WaitingReplay":
@@ -157,12 +162,12 @@ class Game(object):
         self._setRespMsg(resp, True)
 
     def on_post_Register(self, req, resp):
-        name = req.media.get("name", None)
+        name = req.media.get("Name", None)
         if name is None:
             resp.status = 401
             return
 
-        pwd = req.media.get("pwd", None)
+        pwd = req.media.get("Pwd", None)
         if pwd is None:
             self._setRespMsg(resp, False, "password can not be null")
             return
@@ -180,6 +185,28 @@ class Game(object):
         self._height = 0,
         self._scoreMsg = {}
         self._lastUpdateTime = 0
+
+    def _isValidPlayerAction(self, req, resp):
+        isValid, player = self._isValidPlayer(req, resp)
+
+        if not isValid:
+            return False, None
+
+        if not self._getState() == "Playing":
+            self._setRespMsg(resp, False, msg="It cannot set click grid")
+            return False, None
+
+        if not player == self._players[self._currentPlayer].GetName():
+            self._setRespMsg(resp, False, msg="It is not {} turn".format(player))
+            return False, None
+
+        x = req.media.get("X", None)
+        y = req.media.get("Y", None)
+        if x is None or y is None:
+            self._setRespMsg(resp, False, msg="Please enter x and y")
+            return False, None
+
+        return True, (x, y)
 
     def _processPlayerAction(self, action, position):
         if not self._gridManager.IsValidGrid(position):
@@ -218,20 +245,19 @@ class Game(object):
         resp.status = status
         resp.headers["Content-type"] = "application/json"
         rtn = {
-            "isSuccess": isSuccess,
-            "message": msg
+            "IsSuccess": isSuccess,
+            "Message": msg
         }
         for k, v in kwargs.items():
             rtn[k] = v
 
-        resp.media = json.dumps(rtn)
+        resp.media = rtn
         if msg is not None and len(msg) != 0:
             print msg
 
     def _startGame(self):
-        self._setState("InitGrid")
+        self._setState("InitGame")
         self._gridManager = GridManager(self._width, self._height, self._mineCount)
-        self._setState("AdjustPlayer")
         for player in self._players:
             player.ResetScore()
         self._currentPlayer = 0
@@ -241,7 +267,7 @@ class Game(object):
         self._setupComputer()
 
     def _computerRun(self):
-        while self._state not in ["Init", "EndGame"]:
+        while self._state not in ["Start", "End"]:
             gevent.sleep(1)
             if self._state != "Playing":
                 continue
@@ -271,7 +297,12 @@ class Game(object):
             resp.status = 401
             return False, None
 
-        playerName = self._playerManager.VerifyToken(token)["name"]
+        tokenInfo = self._playerManager.VerifyToken(token)
+        if tokenInfo is None:
+            resp.status = 401
+            return False, None
+
+        playerName = tokenInfo.get("Name", None)
         if playerName is None:
             resp.status = 401
             return False, None
@@ -280,4 +311,3 @@ class Game(object):
             return False, None
 
         return True, playerName
-

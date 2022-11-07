@@ -19,26 +19,26 @@ class GridManager(object):
         for x in range(self._width):
             for y in range(self._height):
                 self._grids[(x, y)] = {
-                    "x": x,
-                    "y": y,
-                    "isMine": False,
-                    "isFlag": False,
-                    "isMineClicked": False,
-                    "mineCount": 0,
-                    "isOpen": False,
+                    "X": x,
+                    "Y": y,
+                    "IsMine": False,
+                    "IsFlag": False,
+                    "IsMineClicked": False,
+                    "MineCount": 0,
+                    "IsOpen": False,
                 }
 
         # Generate mine
         mine_count = 0
         while mine_count < self._mine_count:
             grid = self._grids[random.randint(0, self._width - 1), random.randint(0, self._height - 1)]
-            if grid["isMine"]:
+            if grid["IsMine"]:
                 continue
-            grid["isMine"] = True
+            grid["IsMine"] = True
             self._mines_grid.append(grid)
             adjacent_grids = self.GetAdjacentGrids(grid)
             for g in adjacent_grids:
-                g["mineCount"] += 1
+                g["MineCount"] += 1
             mine_count += 1
 
     def _calcScore(self, grid, is_clicked):
@@ -46,10 +46,10 @@ class GridManager(object):
             return 0
 
         score = 0
-        isMine = grid["isMine"]
+        isMine = grid["IsMine"]
 
         if is_clicked:
-            score += GridManager.CLICK_MINE if isMine else grid["mineCount"]
+            score += GridManager.CLICK_MINE if isMine else grid["MineCount"]
         else:
             score += GridManager.FLAG_CORRECT if isMine else GridManager.FLAG_ERROR
 
@@ -59,7 +59,7 @@ class GridManager(object):
         relatedPosition = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         eightGrids = []
         for i in range(len(relatedPosition)):
-            item = self._grids.get((grid["x"] + relatedPosition[i][0], grid["y"] + relatedPosition[i][1]), None)
+            item = self._grids.get((grid["X"] + relatedPosition[i][0], grid["Y"] + relatedPosition[i][1]), None)
             if item is not None:
                 eightGrids.append(item)
 
@@ -71,36 +71,36 @@ class GridManager(object):
     def RevealGrid(self, position):
         grid = self._grids.get(position, None)
 
-        isMine = grid["isMine"]
-        mineCount = grid["mineCount"]
+        isMine = grid["IsMine"]
+        mineCount = grid["MineCount"]
 
-        grid["isOpen"] = True
+        grid["IsOpen"] = True
 
-        if grid["isFlag"]:
-            grid["isFlag"] = False
+        if grid["IsFlag"]:
+            grid["IsFlag"] = False
 
         if not isMine and not mineCount == 0:
             return self._calcScore(grid, True)
 
         if isMine:
-            grid["isMineClicked"] = True
+            grid["IsMineClicked"] = True
             return self._calcScore(grid, True)
 
         score = 0
         for g in self.GetAdjacentGrids(grid):
-            if not g["isOpen"]:
-                score += self.RevealGrid((g["x"], g["y"]))
+            if not g["IsOpen"]:
+                score += self.RevealGrid((g["X"], g["Y"]))
         return score
 
     def MarkGrid(self, position):
         grid = self._grids[position]
-        grid["isFlag"] = True
-        grid["isOpen"] = True
+        grid["IsFlag"] = True
+        grid["IsOpen"] = True
         return self._calcScore(grid, False)
 
     def IsAllGridsClicked(self):
         for grid in self._grids.values():
-            if not grid["isOpen"]:
+            if not grid["IsOpen"]:
                 return False
         return True
 
@@ -109,4 +109,4 @@ class GridManager(object):
         if grid is None:
             return False
 
-        return not grid["isOpen"]
+        return not grid["IsOpen"]

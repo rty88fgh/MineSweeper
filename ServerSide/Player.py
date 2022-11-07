@@ -15,16 +15,17 @@ class Player(object):
 
     def SubScore(self, value):
         if value < 0:
-            return False
-        self._calcScore(value * -1)
-        return True
+            return False, self._score
+
+        self._calcScore(-value)
+        return True, self._score
 
     def AddScore(self, value):
         if value < 0:
-            return False
+            return False, self._score
 
         self._calcScore(value)
-        return True
+        return True, self._score
 
     def ResetScore(self):
         self._score = 0
