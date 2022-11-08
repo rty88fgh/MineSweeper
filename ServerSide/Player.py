@@ -32,9 +32,9 @@ class Player(object):
 
     def Serialize(self):
         return {
-            "name": self._name,
-            "score": self._score,
-            "isComputer": self._isComputer
+            "Name": self._name,
+            "Score": self._score,
+            "IsComputer": self._isComputer
         }
 
     def _calcScore(self, value):

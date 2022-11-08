@@ -49,13 +49,13 @@ class View(object):
         self._display.blit(View.ElementDict["Smile"], self._smile_rect)
 
         for i in range(len(players)):
-            player_text = "{0}: ({1})".format(players[i]["name"], players[i]["score"])
+            player_text = "{0}: ({1})".format(players[i]["Name"], players[i]["Score"])
             render = pygame.font.SysFont("Calibri", View.FontSize).render(player_text, True, (0, 0, 0))
             self._display.blit(render,
                                (self._display_width - View.Border - View.ScoreWidth,
                                 View.Border + i * View.FontSize))
         self.DrawPlayerGetScore(scoreMsg)
-        self.DrawCurrentPlayer(current)
+        self.DrawCurrentPlayer(None if current is None else current["Name"])
         if winner is not None and len(winner) != 0:
             self.DrawWin(winner)
         pygame.display.update()
@@ -93,6 +93,8 @@ class View(object):
                                (self._display_width - View.ScoreWidth, View.TopBorder + i * View.FontSize))
 
     def DrawCurrentPlayer(self, player):
+        if player is None:
+            return
         player_text = "Current Player: " + player
         player_render = pygame.font.SysFont("Calibri", View.FontSize).render(player_text, True, (0, 0, 0))
         self._display.blit(player_render, (View.Border, View.Border))

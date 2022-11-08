@@ -7,8 +7,8 @@ class GridManager(object):
     FLAG_ERROR = -75
     CLICK_MINE = -250
 
-    def __init__(self, width, height, mine_count):
-        self._mine_count = mine_count
+    def __init__(self, width, height, mineCount):
+        self._mine_count = mineCount
         self._mines_grid = []
         self._initGrids(width, height)
 

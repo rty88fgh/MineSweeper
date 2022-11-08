@@ -2,8 +2,6 @@ import json
 import gevent
 import requests
 from View import View
-import hashlib
-
 
 class Client(object):
     ServerUrl = "http://127.0.0.1:6060"
@@ -23,24 +21,25 @@ class Client(object):
             elif menuAns == 1 and self._login():
                 break
 
-        isMaster = self._view.GetPlayerAnswer("Are you master?", False, convertFunc=self._convertBool)
-        if isMaster:
-            if not self._configGame():
-                return
+        while True:
+            menuAns = self._view.ConsoleMenu(["Create new game", "Join"])
+            if menuAns == 0 and self._configGame():
+                break
+            elif menuAns == 1 and self._joinGame():
+                break
 
         print "Waiting for start..."
         while True:
-            gameInfo = json.loads(
-                requests.get(Client.ServerUrl + "/GetGameInfo", headers={"Authorization": self._token}).json())
-            if gameInfo["Status"] == "Playing":
+            gameInfo = requests.get(Client.ServerUrl + "/GetGameDetail", headers={"Authorization": self._token}).json()
+            if gameInfo["Status"] != "Init":
                 break
             else:
                 gevent.sleep(1)
                 continue
 
         self._view.InitPyGame(gameInfo["Width"], gameInfo["Height"], self._playerName)
-        while not gameInfo["Status"] == "EndGame":
-            info = self._getRefreshViewParams()
+        while True:
+            info = requests.get(Client.ServerUrl + "/GetGameDetail", headers={"Authorization": self._token}).json()
 
             if info["LastUpdateTime"] != self._lastUpdateTime:
                 self._view.RefreshView(info["Grids"],
@@ -60,24 +59,13 @@ class Client(object):
                 self._view.CloseWindows()
                 return
             elif action == View.Replay:
-                requests.post(Client.ServerUrl + "/Replay", {}, headers={"Authorization": self._token})
+                requests.post(Client.ServerUrl + "/Surrender", {}, headers={"Authorization": self._token})
                 continue
 
             requests.post("{}/{}".format(Client.ServerUrl, action), json.dumps({
                 "X": pos[0],
                 "Y": pos[1],
             }), headers={"Authorization": self._token})
-
-    def _convertBool(self, value):
-        if str(value).lower() in ["y", "yes"]:
-            return True
-        elif str(value).lower() in ["n", "no"]:
-            return False
-        else:
-            raise ValueError()
-
-    def _getRefreshViewParams(self):
-        return json.loads(requests.get(Client.ServerUrl + "/GetGameInfo", headers={"Authorization": self._token}).json())
 
     def _register(self):
         name = self._view.GetPlayerAnswer("What's your name?", isStr=True, defaultValue="Terry")
@@ -101,7 +89,7 @@ class Client(object):
             "Name": name,
             "Pwd": pwd
         }))
-        result = json.loads(resp.json()) if len(resp.content) > 0 else {}
+        result = resp.json() if len(resp.content) > 0 else {}
         msg = result.get("Message", None)
         isSuccess = bool(result.get("IsSuccess", False))
         if resp.status_code == 200:
@@ -126,22 +114,49 @@ class Client(object):
         return False
 
     def _configGame(self):
-        widthCount = self._view.GetPlayerAnswer("Please enter width count (default: 10):", 10)
-        heightCount = self._view.GetPlayerAnswer("Please enter height count (default: 10):", 10)
-        mineCount = self._view.GetPlayerAnswer("Please enter mine count (default: 9):", 9)
+        widthCount = self._view.GetPlayerAnswer("Please enter width count (5 ~ 20, default: 10):", 10)
+        heightCount = self._view.GetPlayerAnswer("Please enter height count (5 ~ 20, default: 10):", 10)
+        mineCount = self._view.GetPlayerAnswer("Please enter mine count (1 ~ 20, default: 9):", 9)
+        playerCount = self._view.GetPlayerAnswer("Please enter player count (default: 2):", 2)
         computerCount = self._view.GetPlayerAnswer("Please enter computer count (default: 0):", 0)
-        requests.post(Client.ServerUrl + "/ConfigGame", json.dumps({
+        resp = requests.post(Client.ServerUrl + "/CreateNewGame", json.dumps({
             "Width": widthCount,
             "Height": heightCount,
             "MineCount": mineCount,
+            "PlayerCount": playerCount,
             "ComputerCount": computerCount
-        }), headers={"Authorization": self._token})
+        }), headers={"Authorization": self._token}).json()
 
-
-        self._view.GetPlayerAnswer("It will start game when click enter...", isStr=True, defaultValue="")
-        resp = json.loads(
-            requests.post(Client.ServerUrl + "/Start", {}, headers={"Authorization": self._token}).json())
         if not resp["IsSuccess"]:
-            print resp["Message"]
+            print "Error: " + resp["Message"]
+            return False
 
+        print "Game id:{}".format(resp["GameId"])
         return resp["IsSuccess"]
+
+    def _joinGame(self):
+        gamesInfo = requests.get(Client.ServerUrl + "/GetAllGamesInfo", headers={"Authorization": self._token}).json()
+
+        print "Games:"
+        for info in gamesInfo:
+            players = info["Players"]
+            print "Game Id:{} Status:{} Players:{}".format(
+                info["GameId"],
+                info["Status"],
+                "".join([name + "," if name != players[len(players) - 1] else name for name in players]))
+        while True:
+            gameId = self._view.GetPlayerAnswer("Please enter game id (-1 will left join):")
+            if gameId in [g["GameId"] for g in gamesInfo]:
+                break
+            elif gameId == -1:
+                return False
+            print "Please enter valid game id."
+
+        joinResp = requests.post(Client.ServerUrl + "/JoinGame", json.dumps({
+                "id": gameId
+            }), headers={"Authorization": self._token}).json()
+
+        print ("Error:" + joinResp["Message"]) if not joinResp["IsSuccess"] else "Join gameId:{} Success".format(gameId)
+        return joinResp["IsSuccess"]
+
+    def requestWrapper(self, url, ):
