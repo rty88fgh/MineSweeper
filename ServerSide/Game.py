@@ -65,7 +65,8 @@ class Game(object):
         if self.GetState() != "Init":
             return False, "The game has been started. {} cannot left game.".format(name)
 
-        self._players.remove(player)
+        self._players.remove(next((p for p in self._players if p.GetName() == player.GetName())))
+        return True, None
 
     def ProcessPlayerAction(self, player, action, position):
         if not self.GetState() == "Playing":

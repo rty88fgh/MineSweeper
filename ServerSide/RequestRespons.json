@@ -1,93 +1,104 @@
 {
   "Login": {
     "Request": {
-      "name": "string",
-      "password": "string"
+      "Name": "string",
+      "Pwd": "string"
     },
     "Response": {
-      "isSuccess": "boolean",
-      "message": "string",
-      "token": "string"
+      "IsSuccess": "boolean",
+      "Message": "string",
+      "Token": "string"
     }
   },
   "Register": {
     "Request": {
-      "name": "string",
-      "password": "string"
+      "Name": "string",
+      "Pwd": "string"
     },
     "Response": {
-      "isSuccess": "boolean",
-      "message": "string"
+      "IsSuccess": "boolean",
+      "Message": "string"
     }
   },
-  "ConfigGame": {
+  "CreateNewGame": {
     "Request": {
       "MineCount": "number",
-      "width": "number",
-      "height": "number",
-      "computerCount": "number"
+      "Width": "number",
+      "Height": "number",
+      "PlayerCount": "number",
+      "ComputerCount": "number"
     },
     "Response": {
-      "isSuccess": "boolean",
-      "message": "string"
+      "IsSuccess": "boolean",
+      "Message": "string"
     }
   },
-  "Start": {
+  "GetAllGamesInfo": {
+    "Request": {},
+    "Response": [
+      {
+        "Players": "string",
+        "Status": "string",
+        "GameId": "number"
+      }
+    ]
+  },
+  "JoinGame": {
     "Request": {
+      "Id": "number"
     },
     "Response": {
-      "isSuccess": "boolean",
-      "message": "string"
+      "IsSuccess": "boolean",
+      "Message": "string"
     }
   },
-  "Action": {
+  "Click": {
+    "Request": {
+      "X": "number",
+      "Y": "number"
+    },
+    "Response": {
+      "IsSuccess": "boolean",
+      "Message": "string"
+    }
+  },
+  "Flag": {
     "Request": {
       "X": "number",
       "Y": "number",
-      "action": "string"
     },
     "Response": {
-      "isSuccess": "boolean",
-      "message": "string"
+      "IsSuccess": "boolean",
+      "Message": "string"
     }
   },
-  "Replay": {
-    "Request": {
-    },
+  "Surrender": {
+    "Request": {},
     "Response": {
-      "isSuccess": "boolean",
-      "message": "string"
-    }
-  },
-  "InitGame": {
-    "Request": {
-    },
-    "Response": {
-      "isSuccess": "boolean",
-      "message": "string"
+      "IsSuccess": "boolean",
+      "Message": "string"
     }
   },
   "GameInfo": {
-    "Request": {
-    },
+    "Request": {},
     "Response": {
-      "grids": {
+      "Grids": {
         "X": "number",
         "Y": "number",
         "IsMine": "boolean",
-        "": "boolean",
+        "IsFlag": "boolean",
         "IsMineClicked": "boolean",
         "MineCount": "number",
         "IsOpen": "boolean"
       },
-      "players": "string[]",
-      "current": "string",
-      "scoreMsg": "string[]",
-      "status": "string",
-      "width": "number",
-      "height": "number",
-      "winner": "string",
-      "lastUpdateTime": "number"
+      "Players": "string[]",
+      "Current": "string",
+      "ScoreMsg": "string[]",
+      "Status": "string",
+      "Width": "number",
+      "Height": "number",
+      "Winner": "string",
+      "LastUpdateTime": "number"
     }
   }
 }

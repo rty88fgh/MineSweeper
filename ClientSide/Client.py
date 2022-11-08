@@ -22,11 +22,13 @@ class Client(object):
                 break
 
         while True:
-            menuAns = self._view.ConsoleMenu(["Create new game", "Join"])
+            menuAns = self._view.ConsoleMenu(["Create new game", "Join", "Left"])
             if menuAns == 0 and self._configGame():
                 break
             elif menuAns == 1 and self._joinGame():
                 break
+            elif menuAns == 2:
+                self._leftGame()
 
         print "Waiting for start..."
         while True:
@@ -157,4 +159,11 @@ class Client(object):
             }), headers={"Authorization": self._token}).json()
 
         print ("Error:" + joinResp["Message"]) if not joinResp["IsSuccess"] else "Join gameId:{} Success".format(gameId)
+        return joinResp["IsSuccess"]
+
+    def _leftGame(self):
+        joinResp = requests.post(Client.ServerUrl + "/LeftGame", headers={"Authorization": self._token}).json()
+
+        print ("Error:" + joinResp["Message"]) if not joinResp["IsSuccess"] else \
+            "{} lefts gameId:{} Success".format(self._playerName, joinResp["GameId"])
         return joinResp["IsSuccess"]

@@ -5,8 +5,9 @@ from PlayerManager import PlayerManager
 
 class GameManager(object):
     def __init__(self):
+        self._nextGameId = 1
         self._playerManager = PlayerManager()
-        self._allGames = []
+        self._allGames = {}
         self._allPlayers = {}
 
     def on_post_Login(self, req, resp):
@@ -27,37 +28,60 @@ class GameManager(object):
         if not isValid:
             return
 
-        name = player.GetName()
-        if name in self._allPlayers and self._allPlayers[name].GetStatus() != "End":
-            self._setRespMsg(resp, True, msg="{} has been join game".format(name))
-            return
-
-        gameIndex = req.media.get("id", None)
-        if gameIndex is None:
+        gameId = req.media.get("id", None)
+        if gameId is None:
             resp.status = 400
             return
 
-        if len(self._allGames) < gameIndex:
+        name = player.GetName()
+        if name in self._allPlayers:
+            # Join back
+            if self._allPlayers[name] == self._allGames[gameId]:
+                self._setRespMsg(resp, True)
+                return
+            else:
+                if self._allPlayers[name].GetState() != "End":
+                    self._setRespMsg(resp, False, msg="{} has been joined game".format(name))
+                    return
+
+        if gameId not in self._allGames:
             self._setRespMsg(resp, False, msg="Failed to find game id")
             return
 
-        game = self._allGames[gameIndex]
+        game = self._allGames[gameId]
         isSuccess, msg = game.Join(player)
         if isSuccess:
             self._allPlayers[name] = game
         self._setRespMsg(resp, isSuccess, msg=msg)
 
+    def on_post_LeftGame(self, req, resp):
+        isValid, player = self._isValidPlayer(req, resp)
+        if not isValid:
+            return
+
+        name = player.GetName()
+        if name not in self._allPlayers:
+            self._setRespMsg(resp, False, msg="{} did not join the game".format(name))
+            return
+
+        game = self._allPlayers[name]
+        isSuccess, msg = game.Left(player)
+        if isSuccess:
+            del self._allPlayers[name]
+        self._setRespMsg(resp, isSuccess, msg=msg, GameId=next((k for k, v in self._allGames.items() if v == game)))
+
     def on_get_GetAllGamesInfo(self, req, resp):
         isValid, player = self._isValidPlayer(req, resp)
         if not isValid:
             return
+
         result = []
-        for game in [g for g in self._allGames if g.GetState() != "End"]:
+        for gameId, game in [(k, v) for k, v in self._allGames.items() if v.GetState() != "End"]:
             info = game.GetGameInfo()
             result.append({
                 "Players": [p.GetName() for p in info["Players"]],
                 "Status": info["Status"],
-                "GameId": self._allGames.index(game)
+                "GameId": gameId
             })
 
         resp.media = result
@@ -70,7 +94,7 @@ class GameManager(object):
         if name in self._allPlayers and self._allPlayers[name].GetState() != "End":
             self._setRespMsg(resp,
                              False,
-                             msg=" Failed to create new game. {} has been join game.".format(name))
+                             msg=" Failed to create new game. {} has been joined game.".format(name))
             return
 
         try:
@@ -95,10 +119,12 @@ class GameManager(object):
             if isSuccess:
                 game = Game(width, height, mineCount, playerCount, computerCount)
                 game.Join(player)
-                self._allGames.append(game)
+                gameId = self._nextGameId
+                self._nextGameId += 1
+                self._allGames[gameId] = game
                 self._allPlayers[player.GetName()] = game
 
-            self._setRespMsg(resp, isSuccess, msg=msg, GameId=self._allGames.index(game) if isSuccess else None)
+            self._setRespMsg(resp, isSuccess, msg=msg, GameId=gameId if isSuccess else None)
         except ValueError:
             self._setRespMsg(resp, False, msg="It is failed to convert type")
 
