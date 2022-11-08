@@ -62,7 +62,7 @@ class Game(object):
         if name not in allPlayers:
             return False, "{} is not in the game".format(name)
 
-        if self.GetState() == "Playing":
+        if self.GetState() != "Init":
             return False, "The game has been started. {} cannot left game.".format(name)
 
         self._players.remove(player)
@@ -154,7 +154,7 @@ class Game(object):
         self._lastUpdateTime = time.time()
 
     def _computerRun(self):
-        while self._state != "End":
+        while self.GetState() != "End":
             gevent.sleep(1)
             if not self._players[self._currentPlayer].IsComputer():
                 continue

@@ -28,7 +28,7 @@ class GameManager(object):
             return
 
         name = player.GetName()
-        if name in self._allPlayers:
+        if name in self._allPlayers and self._allPlayers[name].GetStatus() != "End":
             self._setRespMsg(resp, True, msg="{} has been join game".format(name))
             return
 
@@ -52,7 +52,7 @@ class GameManager(object):
         if not isValid:
             return
         result = []
-        for game in self._allGames:
+        for game in [g for g in self._allGames if g.GetState() != "End"]:
             info = game.GetGameInfo()
             result.append({
                 "Players": [p.GetName() for p in info["Players"]],
@@ -67,8 +67,9 @@ class GameManager(object):
         if not isValid:
             return
         name = player.GetName()
-        if name in self._allPlayers:
-            self._setRespMsg(resp, False,
+        if name in self._allPlayers and self._allPlayers[name].GetState() != "End":
+            self._setRespMsg(resp,
+                             False,
                              msg=" Failed to create new game. {} has been join game.".format(name))
             return
 

@@ -158,5 +158,3 @@ class Client(object):
 
         print ("Error:" + joinResp["Message"]) if not joinResp["IsSuccess"] else "Join gameId:{} Success".format(gameId)
         return joinResp["IsSuccess"]
-
-    def requestWrapper(self, url, ):
