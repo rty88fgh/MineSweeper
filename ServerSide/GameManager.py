@@ -23,7 +23,7 @@ class GameManager(object):
 
         self._setRespMsg(resp, True, Token=token)
 
-    def on_post_JoinGame(self, req, resp):
+    def on_post_Join(self, req, resp):
         isValid, player = self._isValidPlayer(req, resp)
         if not isValid:
             return
@@ -54,7 +54,7 @@ class GameManager(object):
             self._allPlayers[name] = game
         self._setRespMsg(resp, isSuccess, msg=msg)
 
-    def on_post_LeftGame(self, req, resp):
+    def on_post_Leave(self, req, resp):
         isValid, player = self._isValidPlayer(req, resp)
         if not isValid:
             return
@@ -65,12 +65,12 @@ class GameManager(object):
             return
 
         game = self._allPlayers[name]
-        isSuccess, msg = game.Left(player)
+        isSuccess, msg = game.Leave(player)
         if isSuccess:
             del self._allPlayers[name]
         self._setRespMsg(resp, isSuccess, msg=msg, GameId=next((k for k, v in self._allGames.items() if v == game)))
 
-    def on_get_GetAllGamesInfo(self, req, resp):
+    def on_get_GetInfo(self, req, resp):
         isValid, player = self._isValidPlayer(req, resp)
         if not isValid:
             return
@@ -134,7 +134,7 @@ class GameManager(object):
     def on_post_Flag(self, req, resp):
         self._processPlayerActionRequest(req, resp, "Flag")
 
-    def on_get_GetGameDetail(self, req, resp):
+    def on_get_GetDetail(self, req, resp):
         isValid, player = self._isValidPlayer(req, resp)
         if not isValid:
             return

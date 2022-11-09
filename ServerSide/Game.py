@@ -55,7 +55,7 @@ class Game(object):
             self._startGame()
         return True, None
 
-    def Left(self, player):
+    def Leave(self, player):
         allPlayers = [p.GetName() for p in self._players]
         name = player.GetName()
 
@@ -63,7 +63,7 @@ class Game(object):
             return False, "{} is not in the game".format(name)
 
         if self.GetState() != "Init":
-            return False, "The game has been started. {} cannot left game.".format(name)
+            return False, "The game has been started. {} cannot leave game.".format(name)
 
         self._players.remove(next((p for p in self._players if p.GetName() == player.GetName())))
         return True, None

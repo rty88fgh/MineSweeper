@@ -52,6 +52,13 @@
       "Message": "string"
     }
   },
+  "LeftGame": {
+    "Request": {},
+    "Response": {
+      "IsSuccess": "boolean",
+      "Message": "string"
+    }
+  },
   "Click": {
     "Request": {
       "X": "number",
