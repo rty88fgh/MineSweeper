@@ -1,11 +1,11 @@
 from abc import ABCMeta, abstractmethod
 
 
-class PlayerDAOBase:
+class DAOBase:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def Insert(self, name, password):
+    def Insert(self, **kwargs):
         pass
 
     @abstractmethod
@@ -13,7 +13,7 @@ class PlayerDAOBase:
         pass
 
     @abstractmethod
-    def FindByName(self, name):
+    def FindByName(self, **kwargs):
         pass
 
 

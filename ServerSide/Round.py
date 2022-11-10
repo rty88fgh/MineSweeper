@@ -4,6 +4,7 @@ import threading
 import time
 import gevent
 from Computer import Computer
+from Code import Code
 from GridManager import GridManager
 from PlayerManager import PlayerManager
 
@@ -45,44 +46,39 @@ class Game(object):
         allPlayers = [p.GetName() for p in self._players]
         name = player.GetName()
         if self.GetState() != "Init" and name not in allPlayers:
-            return False, "The game has been started."
+            return Code.GAME_STARTED
 
         if name in [p.GetName() for p in self._players]:
-            return True, "{} has logon the game.".format(name)
+            return Code.JOIN_BACK
 
         self._players.append(player)
         if len(self._players) == self._playerCount:
             self._startGame()
-        return True, None
+        return Code.SUCCESS
 
     def Leave(self, player):
-        allPlayers = [p.GetName() for p in self._players]
-        name = player.GetName()
-
-        if name not in allPlayers:
-            return False, "{} is not in the game".format(name)
-
         if self.GetState() != "Init":
-            return False, "The game has been started. {} cannot leave game.".format(name)
+            return Code.GAME_STARTED
 
         self._players.remove(next((p for p in self._players if p.GetName() == player.GetName())))
-        return True, None
+        return Code.SUCCESS
 
     def ProcessPlayerAction(self, player, action, position):
         if not self.GetState() == "Playing":
-            return False, "It cannot set click grid"
+            return Code.ROUND_NOT_PLAYING
 
         if not player.GetName() == self._players[self._currentPlayer].GetName():
-            return False, "It is not {} turn".format(player.GetName())
+            return Code.NOT_PLAYER_TURN
 
         if not self._gridManager.IsValidGrid(position):
-            return False, "{} is not valid grid".format(position)
-        if str(action) == "Click":
+            return Code.POSITION_INVALID
+
+        if str(action) == "Open":
             score = self._gridManager.RevealGrid(position)
-        elif str(action) == "Flag":
+        elif str(action) == "SetFlag":
             score = self._gridManager.MarkGrid(position)
         else:
-            return False, "{} is unknown action".format(action)
+            return Code.ACTION_INVALID
 
         self._addPlayerScore(score)
         self._adjustPlayerSeq()
@@ -94,15 +90,15 @@ class Game(object):
                                                   reverse=True)).GetName()
 
         self._lastUpdateTime = time.time()
-        return True, None
+        return Code.SUCCESS
 
-    def GetGameInfo(self):
+    def GetInfo(self):
         scoreMsg = [p[1] for p in sorted(self._scoreMsg.items(), key=lambda pair: pair[0])]
         winner = self._winner if self.GetState() == "End" else None
         return {
             "Grids": None if self.GetState() == "Init" else self._gridManager.GetGrids().values(),
-            "Players": [p for p in self._players],
-            "Current": None if self.GetState() != "Playing" else self._players[self._currentPlayer],
+            "Players": [p.GetName() for p in self._players],
+            "Current": None if self.GetState() != "Playing" else self._players[self._currentPlayer].GetName(),
             "ScoreMsg": scoreMsg,
             "Width": self._width,
             "Height": self._height,
@@ -113,10 +109,9 @@ class Game(object):
 
     def Surrender(self, player):
         name = player.GetName()
-        if name not in [p.GetName() for p in self._players]:
-            return False, "{} is not join game".format(name)
+
         if self.GetState() != "Playing":
-            return False, "It cannot surrender while game status:{}".format(self.GetState())
+            return Code.ROUND_NOT_PLAYING
 
         self._surrenders.append(player)
         self._scoreMsg[len(self._scoreMsg)] = "{} surrender".format(name)
@@ -127,7 +122,7 @@ class Game(object):
                             {p.GetName() for p in self._surrenders}).pop()
 
         self._lastUpdateTime = time.time()
-        return True, None
+        return Code.ROUND_NOT_PLAYING
 
     def _addPlayerScore(self, score):
         player = self._players[self._currentPlayer]
