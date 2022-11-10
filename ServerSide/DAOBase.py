@@ -5,7 +5,7 @@ class DAOBase:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def Insert(self, **kwargs):
+    def Insert(self, name, password):
         pass
 
     @abstractmethod
@@ -13,7 +13,11 @@ class DAOBase:
         pass
 
     @abstractmethod
-    def FindByName(self, **kwargs):
+    def FindByName(self, name):
+        pass
+
+    @abstractmethod
+    def DeleteByName(self, name):
         pass
 
 

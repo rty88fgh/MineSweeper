@@ -46,7 +46,7 @@ class Game(object):
         allPlayers = [p.GetName() for p in self._players]
         name = player.GetName()
         if self.GetState() != "Init" and name not in allPlayers:
-            return Code.GAME_STARTED
+            return Code.ROUND_NOT_INIT
 
         if name in [p.GetName() for p in self._players]:
             return Code.JOIN_BACK
@@ -58,7 +58,7 @@ class Game(object):
 
     def Leave(self, player):
         if self.GetState() != "Init":
-            return Code.GAME_STARTED
+            return Code.ROUND_NOT_INIT
 
         self._players.remove(next((p for p in self._players if p.GetName() == player.GetName())))
         return Code.SUCCESS
@@ -97,8 +97,8 @@ class Game(object):
         winner = self._winner if self.GetState() == "End" else None
         return {
             "Grids": None if self.GetState() == "Init" else self._gridManager.GetGrids().values(),
-            "Players": [p.GetName() for p in self._players],
-            "Current": None if self.GetState() != "Playing" else self._players[self._currentPlayer].GetName(),
+            "Players": [p.Serialize() for p in self._players],
+            "Current": None if self.GetState() != "Playing" else self._players[self._currentPlayer].Serialize(),
             "ScoreMsg": scoreMsg,
             "Width": self._width,
             "Height": self._height,
@@ -122,7 +122,7 @@ class Game(object):
                             {p.GetName() for p in self._surrenders}).pop()
 
         self._lastUpdateTime = time.time()
-        return Code.ROUND_NOT_PLAYING
+        return Code.SUCCESS
 
     def _addPlayerScore(self, score):
         player = self._players[self._currentPlayer]

@@ -12,4 +12,5 @@ class Code(object):
     POSITION_INVALID = -107
     ACTION_INVALID = -108
     PLAYER_DUPLICATE = -109
+    LOGIN_FAILED = -110
 

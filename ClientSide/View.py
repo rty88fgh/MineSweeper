@@ -30,9 +30,9 @@ class View(object):
         "Grid": pygame.image.load("Sprite/Grid.png"),
         "Gameover": pygame.image.load("Sprite/gameover.png")
     }
-    Click = "Click"
-    Flag = "Flag"
-    Replay = "Replay"
+    Open = "Open"
+    SetFlag = "SetFlag"
+    Surrender = "Surrender"
     Quit = "Quit"
     LeftButton = 1
     RightButton = 3
@@ -106,15 +106,15 @@ class View(object):
                     return View.Quit, None
                 elif event.type == pygame.MOUSEBUTTONUP:
                     if self._smile_rect.collidepoint(event.pos):
-                        return View.Replay, None
+                        return View.Surrender, None
 
                     position = self._getClickedPosition(event)
                     if position is None:
                         return None, None
                     elif event.button == View.LeftButton:
-                        return View.Click, position
+                        return View.Open, position
                     elif event.button == View.RightButton:
-                        return View.Flag, position
+                        return View.SetFlag, position
             return None, None
         except KeyboardInterrupt:
             return View.Quit, None

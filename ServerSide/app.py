@@ -1,15 +1,16 @@
 import falcon as falcon
-from GameManager import GameManager
 
-gameManager = GameManager()
+from Dispatcher import Dispatcher
+
+dispatcher = Dispatcher()
 app = application = falcon.API()
-app.add_route("/Login", gameManager, suffix="Login")
-app.add_route("/CreateNewGame", gameManager, suffix="CreateNewGame")
-app.add_route("/GetInfo", gameManager, suffix="GetInfo")
-app.add_route("/Join", gameManager, suffix="Join")
-app.add_route("/Leave", gameManager, suffix="Leave")
-app.add_route("/GetDetail", gameManager, suffix="GetDetail")
-app.add_route("/Click", gameManager, suffix="Click")
-app.add_route("/Flag", gameManager, suffix="Flag")
-app.add_route("/Surrender", gameManager, suffix="Surrender")
-app.add_route("/Register", gameManager, suffix="Register")
+app.add_route("/Login", dispatcher, suffix="Login")
+app.add_route("/Create", dispatcher, suffix="Create")
+app.add_route("/GetAllRound", dispatcher, suffix="GetAllRound")
+app.add_route("/Join", dispatcher, suffix="Join")
+app.add_route("/Leave", dispatcher, suffix="Leave")
+app.add_route("/GetJoinedRound", dispatcher, suffix="GetJoinedRound")
+app.add_route("/Open", dispatcher, suffix="Open")
+app.add_route("/SetFlag", dispatcher, suffix="SetFlag")
+app.add_route("/Surrender", dispatcher, suffix="Surrender")
+app.add_route("/Register", dispatcher, suffix="Register")
