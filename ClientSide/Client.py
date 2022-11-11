@@ -23,7 +23,7 @@ class Client(object):
             Code.PARAMS_INVALID: "Name or password error",
             Code.HAVE_JOINED: "{} cannot create round while has joined othrer round".format(self._playerName),
             Code.PARAMS_INVALID: "Parameter error",
-            Code.ROUNDID_NOT_FIND: "RoundId:{} did not found.",
+            Code.ROUND_ID_NOT_FIND: "RoundId:{} did not found.",
             Code.HAVE_JOINED: "{} has joined other game.",
             Code.ROUND_NOT_INIT: "RoundId:{} status isn't Init",
             Code.JOIN_BACK: "{} joined back".format(self._playerName),
@@ -176,7 +176,7 @@ class Client(object):
         return False if resp is None else resp["Code"] >= 0
 
     def _leftGame(self):
-        resp = self._sendService("/Leave")
+        resp = self._sendService("/Leave", requests.post)
 
         return False if resp is None else resp["Code"] >= 0
 

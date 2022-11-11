@@ -3,7 +3,7 @@ from hashlib import md5
 
 from AccountManager import AccountManager
 from Code import Code
-from GameManager import GameManager
+from RoundManager import RoundManager
 from PlayerManager import PlayerManager
 
 
@@ -11,7 +11,7 @@ class Dispatcher(object):
     def __init__(self):
         self._accountManager = AccountManager()
         self._playerManager = PlayerManager()
-        self._gameManager = GameManager()
+        self._gameManager = RoundManager()
 
     def on_post_Login(self, req, resp):
         if not self._isValidRequest(req):
@@ -58,11 +58,15 @@ class Dispatcher(object):
         if info is None:
             return
 
-        player = self._playerManager.GetPlayerInfo(info["name"])
+        player = self._playerManager.GetPlayerInfo(info["Name"])
         code = self._gameManager.LeaveRound(player)
         self._setRespMsg(resp, code)
 
     def on_get_GetAllRound(self, req, resp):
+        if not self._isValidRequest(req):
+            resp.status = 401
+            return
+
         info = self._getTokenInfo(req, resp)
         if info is None:
             return

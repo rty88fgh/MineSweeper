@@ -2,25 +2,48 @@
   "Login": {
     "Request": {
       "Name": "string",
-      "Pwd": "string"
+      "Password": "string"
     },
     "Response": {
-      "IsSuccess": "boolean",
-      "Message": "string",
+      "Code": "number",
       "Token": "string"
     }
   },
   "Register": {
     "Request": {
       "Name": "string",
-      "Pwd": "string"
+      "Password": "string"
     },
     "Response": {
-      "IsSuccess": "boolean",
-      "Message": "string"
+      "Code": "number"
     }
   },
-  "CreateNewGame": {
+  "GetAllRound": {
+    "Request": {},
+    "Response": [
+      {
+        "RoundId": "number",
+        "Grids": {
+          "X": "number",
+          "Y": "number",
+          "IsMine": "boolean",
+          "IsFlag": "boolean",
+          "IsMineClicked": "boolean",
+          "MineCount": "number",
+          "IsOpen": "boolean"
+        },
+        "Players": "string[]",
+        "Current": "string",
+        "ScoreMsg": "string[]",
+        "Status": "string",
+        "Width": "number",
+        "Height": "number",
+        "Winner": "string",
+        "LastUpdateTime": "number"
+      }
+    ]
+  },
+  "Create": {
     "Request": {
       "MineCount": "number",
       "Width": "number",
@@ -29,64 +52,48 @@
       "ComputerCount": "number"
     },
     "Response": {
-      "IsSuccess": "boolean",
-      "Message": "string"
+      "Code": "number"
     }
   },
-  "GetAllGamesInfo": {
-    "Request": {},
-    "Response": [
-      {
-        "Players": "string",
-        "Status": "string",
-        "GameId": "number"
-      }
-    ]
-  },
-  "JoinGame": {
+  "Join": {
     "Request": {
       "Id": "number"
     },
     "Response": {
-      "IsSuccess": "boolean",
-      "Message": "string"
+      "Code": "number"
     }
   },
-  "LeftGame": {
+  "Leave": {
     "Request": {},
     "Response": {
-      "IsSuccess": "boolean",
-      "Message": "string"
+      "Code": "number"
     }
   },
-  "Click": {
+  "Open": {
     "Request": {
       "X": "number",
       "Y": "number"
     },
     "Response": {
-      "IsSuccess": "boolean",
-      "Message": "string"
+      "Code": "number"
     }
   },
-  "Flag": {
+  "SetFlag": {
     "Request": {
       "X": "number",
-      "Y": "number",
+      "Y": "number"
     },
     "Response": {
-      "IsSuccess": "boolean",
-      "Message": "string"
+      "Code": "number"
     }
   },
   "Surrender": {
     "Request": {},
     "Response": {
-      "IsSuccess": "boolean",
-      "Message": "string"
+      "Code": "number"
     }
   },
-  "GameInfo": {
+  "GetJoinedRound": {
     "Request": {},
     "Response": {
       "Grids": {

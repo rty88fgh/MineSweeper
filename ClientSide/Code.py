@@ -3,7 +3,7 @@ class Code(object):
     JOIN_BACK = 100
 
     HAVE_JOINED = -100
-    ROUNDID_NOT_FIND = -101
+    ROUND_ID_NOT_FIND = -101
     ROUND_NOT_INIT = -102
     ROUND_NOT_PLAYING = -103
     PLAYER_NOT_JOIN = -104

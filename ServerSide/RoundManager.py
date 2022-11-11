@@ -5,7 +5,7 @@ from Round import Game
 from PlayerManager import PlayerManager
 
 
-class GameManager(object):
+class RoundManager(object):
     def __init__(self):
         self._nextRoundId = 1
         self._playerManager = PlayerManager()

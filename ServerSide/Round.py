@@ -116,10 +116,13 @@ class Game(object):
         self._surrenders.append(player)
         self._scoreMsg[len(self._scoreMsg)] = "{} surrender".format(name)
         self._adjustPlayerSeq()
-        if len(self._surrenders) == len(self._players) - 1:
+        if len(self._players) - len(self._surrenders) <= 1:
             self._setState("End")
-            self._winner = ({p.GetName() for p in self._players} -
-                            {p.GetName() for p in self._surrenders}).pop()
+            lastPlayer = None
+            if len(self._players) - len(self._surrenders) == 1:
+                lastPlayer = ({p.GetName() for p in self._players} - {p.GetName() for p in self._surrenders}).pop()
+
+            self._winner = "NoBody" if lastPlayer is None else lastPlayer
 
         self._lastUpdateTime = time.time()
         return Code.SUCCESS
@@ -134,7 +137,7 @@ class Game(object):
         self._scoreMsg[len(self._scoreMsg)] = player_text
 
     def _adjustPlayerSeq(self):
-        while True:
+        while len(self._players) - len(self._surrenders) > 0:
             self._currentPlayer = (self._currentPlayer + 1) % len(self._players)
             if self._players[self._currentPlayer].GetName() not in [p.GetName() for p in self._surrenders]:
                 break
