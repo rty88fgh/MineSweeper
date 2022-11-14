@@ -14,9 +14,7 @@ class AccountManager(object):
 
     def Login(self, name, password):
         account = self._dao.FindByName(name)
-        algo = hashlib.md5()
-        algo.update(password)
-        return not (account is None or account["Password"] != algo.hexdigest())
+        return not (account is None or account["Password"] != password)
 
     def EncodeToken(self, name):
         token = jwt.encode({
@@ -38,8 +36,6 @@ class AccountManager(object):
         if player is not None:
             return False
 
-        hashAlgo = hashlib.md5()
-        hashAlgo.update(password)
-        self._dao.Insert(name, hashAlgo.hexdigest())
+        self._dao.Insert(name, password)
         return True
 

@@ -109,9 +109,12 @@ class Client(object):
     def _register(self):
         name = self._view.GetPlayerAnswer("What's your name?", isStr=True, defaultValue="Terry")
         password = self._view.GetPlayerAnswer("Password: ", isStr=True, defaultValue="1234")
+        algo = md5()
+        algo.update(password)
+
         resp = self._sendService("/Register", requests.post, data={
             "Name": name,
-            "Password": password
+            "Password": algo.hexdigest()
         }, useAuth=False)
 
         if resp is None:
@@ -125,9 +128,12 @@ class Client(object):
         if password is None:
             password = self._view.GetPlayerAnswer("Password: ", isStr=True, defaultValue="1234")
 
+        algo = md5()
+        algo.update(password)
+
         resp = self._sendService("/Login", requests.post, data={
             "Name": name,
-            "Password": password
+            "Password": algo.hexdigest()
         }, useAuth=False)
 
         if resp is not None and resp["Code"] >= 0:
