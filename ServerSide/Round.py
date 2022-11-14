@@ -1,12 +1,9 @@
 import copy
-import json
 import threading
 import time
 import gevent
 from Computer import Computer
-from Code import Code
 from GridManager import GridManager
-from PlayerManager import PlayerManager
 
 
 class Game(object):
@@ -46,39 +43,39 @@ class Game(object):
         allPlayers = [p.GetName() for p in self._players]
         name = player.GetName()
         if self.GetState() != "Init" and name not in allPlayers:
-            return Code.ROUND_NOT_INIT
+            return -102
 
         if name in [p.GetName() for p in self._players]:
-            return Code.JOIN_BACK
+            return 100  # Join back
 
         self._players.append(player)
         if len(self._players) == self._playerCount:
             self._startGame()
-        return Code.SUCCESS
+        return 0
 
     def Leave(self, player):
         if self.GetState() != "Init":
-            return Code.ROUND_NOT_INIT
+            return -102
 
         self._players.remove(next((p for p in self._players if p.GetName() == player.GetName())))
-        return Code.SUCCESS
+        return 0
 
     def ProcessPlayerAction(self, player, action, position):
         if not self.GetState() == "Playing":
-            return Code.ROUND_NOT_PLAYING
+            return -103
 
         if not player.GetName() == self._players[self._currentPlayer].GetName():
-            return Code.NOT_PLAYER_TURN
+            return -106
 
         if not self._gridManager.IsValidGrid(position):
-            return Code.POSITION_INVALID
+            return -107
 
         if str(action) == "Open":
             score = self._gridManager.RevealGrid(position)
         elif str(action) == "SetFlag":
             score = self._gridManager.MarkGrid(position)
         else:
-            return Code.ACTION_INVALID
+            return -108
 
         self._addPlayerScore(score)
         self._adjustPlayerSeq()
@@ -90,7 +87,7 @@ class Game(object):
                                                   reverse=True)).GetName()
 
         self._lastUpdateTime = time.time()
-        return Code.SUCCESS
+        return 0
 
     def GetInfo(self):
         scoreMsg = [p[1] for p in sorted(self._scoreMsg.items(), key=lambda pair: pair[0])]
@@ -111,7 +108,7 @@ class Game(object):
         name = player.GetName()
 
         if self.GetState() != "Playing":
-            return Code.ROUND_NOT_PLAYING
+            return -103
 
         self._surrenders.append(player)
         self._scoreMsg[len(self._scoreMsg)] = "{} surrender".format(name)
@@ -125,7 +122,7 @@ class Game(object):
             self._winner = "NoBody" if lastPlayer is None else lastPlayer
 
         self._lastUpdateTime = time.time()
-        return Code.SUCCESS
+        return 0
 
     def _addPlayerScore(self, score):
         player = self._players[self._currentPlayer]

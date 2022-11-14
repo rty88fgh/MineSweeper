@@ -1,8 +1,5 @@
-import json
 from hashlib import md5
-
 from AccountManager import AccountManager
-from Code import Code
 from RoundManager import RoundManager
 from PlayerManager import PlayerManager
 
@@ -21,16 +18,16 @@ class Dispatcher(object):
         name = req.media.get("Name", None)
         password = req.media.get("Password", None)
         if name is None or password is None:
-            self._setRespMsg(resp, Code.PARAMS_INVALID)
+            self._setRespMsg(resp, -105)
             return
 
         isSuccess = self._accountManager.Login(name, password)
         if not isSuccess:
-            self._setRespMsg(resp, Code.LOGIN_FAILED)
+            self._setRespMsg(resp, -110)
             return
         player = self._playerManager.GetPlayerInfo(name)
         token = self._accountManager.EncodeToken(player.GetName())
-        self._setRespMsg(resp, Code.SUCCESS, Token=token)
+        self._setRespMsg(resp, 0, Token=token)
 
     def on_post_Join(self, req, resp):
         if not self._isValidRequest(req):
@@ -43,7 +40,7 @@ class Dispatcher(object):
 
         roundId = req.media.get("RoundId", None)
         if roundId is None:
-            self._setRespMsg(resp, Code.PARAMS_INVALID)
+            self._setRespMsg(resp, -105)
             return
         player = self._playerManager.GetPlayerInfo(info["Name"])
         code = self._gameManager.JoinRound(player, roundId)
@@ -72,7 +69,7 @@ class Dispatcher(object):
             return
 
         allInfo = self._gameManager.GetAllRound()
-        self._setRespMsg(resp, Code.SUCCESS, data=allInfo)
+        self._setRespMsg(resp, 0, data=allInfo)
 
     def on_post_Create(self, req, resp):
         if not self._isValidRequest(req):
@@ -123,9 +120,9 @@ class Dispatcher(object):
         roundInfo = self._gameManager.GetJoinedRound(player)
 
         if roundInfo is None:
-            self._setRespMsg(resp, Code.PLAYER_NOT_JOIN)
+            self._setRespMsg(resp, -104)
         else:
-            self._setRespMsg(resp, Code.SUCCESS, data=roundInfo)
+            self._setRespMsg(resp, 0, data=roundInfo)
 
     def on_post_Surrender(self, req, resp):
         if not self._isValidRequest(req):
@@ -149,12 +146,12 @@ class Dispatcher(object):
         name = req.media.get("Name", None)
         password = req.media.get("Password", None)
         if name is None or password is None:
-            self._setRespMsg(resp, Code.PARAMS_INVALID)
+            self._setRespMsg(resp, -105)
             return
 
         if not self._playerManager.Create(name) or not self._accountManager.Create(name, password):
-            return self._setRespMsg(resp, Code.PLAYER_DUPLICATE)
-        self._setRespMsg(resp, Code.SUCCESS)
+            return self._setRespMsg(resp, -109)
+        self._setRespMsg(resp, 0)
 
     def _getTokenInfo(self, req, resp):
         token = req.headers.get("Authorization".upper(), None)
@@ -179,8 +176,6 @@ class Dispatcher(object):
             rtn[k] = v
 
         resp.media = rtn
-        if code < 0:
-            print "Error Code:" + next((k for k, v in vars(Code).items() if v == code))
 
     def _getPosition(self, req):
         x = req.media.get("X", None)
@@ -195,7 +190,7 @@ class Dispatcher(object):
         player = self._playerManager.GetPlayerInfo(info["Name"])
         position = self._getPosition(req)
         if position is None:
-            self._setRespMsg(resp, Code.PARAMS_INVALID)
+            self._setRespMsg(resp, -105)
             return
 
         code = self._gameManager.ProcessAction(player, action, position)

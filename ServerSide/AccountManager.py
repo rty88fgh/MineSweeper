@@ -3,7 +3,6 @@ import hashlib
 import jwt
 
 from AccountDAOFile import AccountDAOFile
-from Code import Code
 
 
 class AccountManager(object):

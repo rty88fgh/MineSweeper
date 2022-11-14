@@ -1,10 +1,7 @@
 import json
 from hashlib import md5
-
 import gevent
 import requests
-
-from Code import Code
 from View import View
 
 
@@ -17,19 +14,15 @@ class Client(object):
         self._lastUpdateTime = 0
         self._token = None
         self._codeDict = {
-            Code.PARAMS_INVALID: "Enter name or password error",
-            Code.PLAYER_DUPLICATE: "Player name is duplicate.",
-            Code.HAVE_JOINED: "{} has joined".format(self._playerName),
-            Code.PARAMS_INVALID: "Name or password error",
-            Code.HAVE_JOINED: "{} cannot create round while has joined othrer round".format(self._playerName),
-            Code.PARAMS_INVALID: "Parameter error",
-            Code.ROUND_ID_NOT_FIND: "RoundId:{} did not found.",
-            Code.HAVE_JOINED: "{} has joined other game.",
-            Code.ROUND_NOT_INIT: "RoundId:{} status isn't Init",
-            Code.JOIN_BACK: "{} joined back".format(self._playerName),
-            Code.PLAYER_NOT_JOIN: "{} did not join round".format(self._playerName),
-            Code.POSITION_INVALID: "Position error",
-            Code.LOGIN_FAILED: "Login Failed"
+            100: "{} joined back".format(self._playerName),
+            -100: "{} has joined other game.".format(self._playerName),
+            -101: "RoundId did not found.",
+            -102: "RoundId:{} status isn't Init",
+            -104: "{} did not join round".format(self._playerName),
+            -105: "Parameter error",
+            -107: "Position error",
+            -109: "Player name is duplicate.",
+            -110: "Login Failed"
         }
 
     def Run(self):
@@ -204,7 +197,7 @@ class Client(object):
                 return None
             content = resp.json()
             code = content["Code"]
-            if code == Code.SUCCESS:
+            if code == 0:
                 if printLog:
                     print "{} Success".format(url.replace("/", ""))
             else:

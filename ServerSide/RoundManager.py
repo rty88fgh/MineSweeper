@@ -1,6 +1,3 @@
-import json
-
-from Code import Code
 from Round import Game
 from PlayerManager import PlayerManager
 
@@ -15,12 +12,12 @@ class RoundManager(object):
     def JoinRound(self, player, roundId):
         name = player.GetName()
         if roundId not in self._allGames:
-            return Code.ROUNDID_NOT_FIND
+            return -101
 
         if name in self._allPlayers and \
                 self._allPlayers[name] != self._allGames[roundId] and \
                 self._allPlayers[name].GetState() != "End":
-            return Code.HAVE_JOINED
+            return -100
 
         game = self._allGames[roundId]
         code = game.Join(player)
@@ -31,7 +28,7 @@ class RoundManager(object):
     def LeaveRound(self, player):
         name = player.GetName()
         if name not in self._allPlayers:
-            return Code.PLAYER_NOT_JOIN
+            return -104
 
         game = self._allPlayers[name]
         code = game.Leave(player)
@@ -51,25 +48,25 @@ class RoundManager(object):
     def CreateRound(self, player, mineCount, width, height, playerCount, computerCount):
         name = player.GetName()
         if name in self._allPlayers and self._allPlayers[name].GetState() != "End":
-            return Code.HAVE_JOINED, None
+            return -100, None
 
         if width < 5 or width > 20 or \
                 height < 5 or height > 20 or \
                 mineCount < 1 or mineCount > 20 or \
                 playerCount < 1 or \
                 computerCount < 0:
-            return Code.PARAMS_INVALID, None
+            return -105, None
         game = Game(width, height, mineCount, playerCount, computerCount)
         game.Join(player)
         roundId = self._nextRoundId
         self._nextRoundId += 1
         self._allGames[roundId] = game
         self._allPlayers[player.GetName()] = game
-        return Code.SUCCESS, roundId
+        return 0, roundId
 
     def ProcessAction(self, player, action, position):
         if player.GetName() not in self._allPlayers:
-            return Code.PLAYER_NOT_JOIN
+            return -104
 
         game = self._allPlayers[player.GetName()]
         return game.ProcessPlayerAction(player, action, position)
@@ -83,7 +80,7 @@ class RoundManager(object):
 
     def Surrender(self, player):
         if player.GetName() not in self._allPlayers:
-            return Code.PLAYER_NOT_JOIN
+            return -104
 
         game = self._allPlayers[player.GetName()]
         return game.Surrender(player)
