@@ -1,5 +1,5 @@
 import json
-from IDAO import IDao
+from IDao import IDao
 
 
 class AccountDao(IDao):

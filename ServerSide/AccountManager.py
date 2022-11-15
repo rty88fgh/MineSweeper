@@ -2,7 +2,7 @@ import hashlib
 
 import jwt
 
-from AccountDAO import AccountDao
+from AccountDao import AccountDao
 from ManagerBase import ManagerBase
 from Player import Player
 
