@@ -17,6 +17,7 @@ class Client(object):
             100: "{} joined back".format(self._playerName),
             -100: "{} has joined other game.".format(self._playerName),
             -101: "RoundId did not found.",
+            -103: "Round is not playing",
             -102: "RoundId:{} status isn't Init",
             -104: "{} did not join round".format(self._playerName),
             -105: "Parameter error",
@@ -35,14 +36,14 @@ class Client(object):
                 break
 
         while True:
-            resp = self._sendService("/GetAllRound", requests.get)
+            resp = self._sendService("/Round_GetAllRound", requests.get)
 
-            if resp is None:
+            if resp is None or resp['Code'] < 0:
                 print "Failed to get all rounds. It will retry 1 sec..."
                 gevent.sleep(1)
                 continue
 
-            roundsInfo = resp["data"]
+            roundsInfo = resp["Data"]
 
             print "Rounds:"
             for info in roundsInfo:
@@ -65,13 +66,13 @@ class Client(object):
 
         isInit = False
         while True:
-            resp = self._sendService("/GetJoinedRound", requests.get, printLog=False)
+            resp = self._sendService("/Round_GetJoinedRound", requests.get, printLog=False)
 
             if resp is None:
                 print "Failed to get joined round. It will retry 1 sec..."
                 gevent.sleep(1)
                 continue
-            info = resp["data"]
+            info = resp["Data"]
             if info["Status"] == "Init":
                 gevent.sleep(1)
                 continue
@@ -98,10 +99,10 @@ class Client(object):
                 self._view.CloseWindows()
                 return
             elif action == View.Surrender:
-                self._sendService("/Surrender", requests.post, )
+                self._sendService("/Round_Surrender", requests.post, )
                 continue
 
-            self._sendService("/" + action, requests.post, data={
+            self._sendService("/Round_" + action, requests.post, data={
                 "X": pos[0],
                 "Y": pos[1],
             }, printLog=False)
@@ -112,7 +113,7 @@ class Client(object):
         algo = md5()
         algo.update(password)
 
-        resp = self._sendService("/Register", requests.post, data={
+        resp = self._sendService("/Account_Register", requests.post, data={
             "Name": name,
             "Password": algo.hexdigest()
         }, useAuth=False)
@@ -131,7 +132,7 @@ class Client(object):
         algo = md5()
         algo.update(password)
 
-        resp = self._sendService("/Login", requests.post, data={
+        resp = self._sendService("/Account_Login", requests.post, data={
             "Name": name,
             "Password": algo.hexdigest()
         }, useAuth=False)
@@ -148,7 +149,7 @@ class Client(object):
         mineCount = self._view.GetPlayerAnswer("Please enter mine count (1 ~ 20, default: 9):", 9)
         playerCount = self._view.GetPlayerAnswer("Please enter player count (default: 2):", 2)
         computerCount = self._view.GetPlayerAnswer("Please enter computer count (default: 0):", 0)
-        resp = self._sendService("/Create", requests.post, data={
+        resp = self._sendService("/Round_Create", requests.post, data={
             "Width": widthCount,
             "Height": heightCount,
             "MineCount": mineCount,
@@ -168,14 +169,14 @@ class Client(object):
             elif roundId in allIds:
                 break
             print "Please enter valid game id."
-        resp = self._sendService("/Join", requests.post, data={
+        resp = self._sendService("/Round_Join", requests.post, data={
             "RoundId": roundId
         })
 
         return False if resp is None else resp["Code"] >= 0
 
     def _leftGame(self):
-        resp = self._sendService("/Leave", requests.post)
+        resp = self._sendService("/Round_Leave", requests.post)
 
         return False if resp is None else resp["Code"] >= 0
 
@@ -208,7 +209,7 @@ class Client(object):
                     print "{} Success".format(url.replace("/", ""))
             else:
                 print self._codeDict[code]
-                if code in [Code.PARAMS_INVALID, Code.POSITION_INVALID, Code.ACTION_INVALID]:
+                if code in [-105, -107, -108]:
                     print "Param: " + json.dumps(data)
 
             return content

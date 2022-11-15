@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 
 
-class DAOBase:
+class IDao:
     __metaclass__ = ABCMeta
 
     @abstractmethod

@@ -1,173 +1,63 @@
+import falcon
 from hashlib import md5
-from AccountManager import AccountManager
-from RoundManager import RoundManager
-from PlayerManager import PlayerManager
 
 
 class Dispatcher(object):
-    def __init__(self):
-        self._accountManager = AccountManager()
-        self._playerManager = PlayerManager()
-        self._gameManager = RoundManager()
+    def __init__(self, _isValidTokenFunc, *managers):
+        self.Api = falcon.API()
+        self._managers = {}
+        self._registerAPI(managers)
+        self._isValidTokenFunc = _isValidTokenFunc
 
-    def on_post_Login(self, req, resp):
+    def on_get(self, req, resp):
+        self._processClientRequest(req, resp, 'Get')
+
+    def on_post(self, req, resp):
+        self._processClientRequest(req, resp, 'Post')
+
+    def _processClientRequest(self, req, resp, method):
+        splits = req.path.replace('/', '').split('_')
+        if splits[0] not in self._managers.keys():
+            resp.status = 404
+            return
+
+        manager = self._managers[splits[0]]
+        funcInfo = next((info for info in manager.GetAllProcessInfo() if info['Name'] == splits[1]), None)
+        if funcInfo is None:
+            resp.status = falcon.HTTP_NOT_FOUND
+            return
+
+        if funcInfo['Method'] != method:
+            resp.status = falcon.HTTP_METHOD_NOT_ALLOWED
+            return
+
         if not self._isValidRequest(req):
-            resp.status = 401
+            resp.status = falcon.HTTP_UNAUTHORIZED
             return
 
-        name = req.media.get("Name", None)
-        password = req.media.get("Password", None)
-        if name is None or password is None:
-            self._setRespMsg(resp, -105)
-            return
+        token = None
+        if funcInfo['UseAuth']:
+            token = req.headers.get("Authorization".upper(), None)
+            if token is None or not self._isValidTokenFunc(token):
+                resp.status = falcon.HTTP_UNAUTHORIZED
+                return
 
-        isSuccess = self._accountManager.Login(name, password)
-        if not isSuccess:
-            self._setRespMsg(resp, -110)
-            return
-        player = self._playerManager.GetPlayerInfo(name)
-        token = self._accountManager.EncodeToken(player.GetName())
-        self._setRespMsg(resp, 0, Token=token)
+        code, returnValues = manager.Process(Token=token,
+                                             FuncName=funcInfo['Name'],
+                                             **({} if req.media is None else req.media))
 
-    def on_post_Join(self, req, resp):
-        if not self._isValidRequest(req):
-            resp.status = 401
-            return
+        self._setRespMsg(resp, code, **({} if returnValues is None else returnValues))
 
-        info = self._getTokenInfo(req, resp)
-        if info is None:
-            return
+    def _registerAPI(self, managers):
+        for g in managers:
+            name = type(g).__name__.replace('Manager', '')
 
-        roundId = req.media.get("RoundId", None)
-        if roundId is None:
-            self._setRespMsg(resp, -105)
-            return
-        player = self._playerManager.GetPlayerInfo(info["Name"])
-        code = self._gameManager.JoinRound(player, roundId)
-        self._setRespMsg(resp, code)
+            for info in g.GetAllProcessInfo():
+                self.Api.add_route("/{}_{}".format(name, info['Name']), self)
+            self._managers[name] = g
 
-    def on_post_Leave(self, req, resp):
-        if not self._isValidRequest(req):
-            resp.status = 401
-            return
-
-        info = self._getTokenInfo(req, resp)
-        if info is None:
-            return
-
-        player = self._playerManager.GetPlayerInfo(info["Name"])
-        code = self._gameManager.LeaveRound(player)
-        self._setRespMsg(resp, code)
-
-    def on_get_GetAllRound(self, req, resp):
-        if not self._isValidRequest(req):
-            resp.status = 401
-            return
-
-        info = self._getTokenInfo(req, resp)
-        if info is None:
-            return
-
-        allInfo = self._gameManager.GetAllRound()
-        self._setRespMsg(resp, 0, data=allInfo)
-
-    def on_post_Create(self, req, resp):
-        if not self._isValidRequest(req):
-            resp.status = 401
-            return
-
-        info = self._getTokenInfo(req, resp)
-        if info is None:
-            return
-
-        try:
-            mineCount = int(req.media["MineCount"])
-            width = int(req.media["Width"])
-            height = int(req.media["Height"])
-            playerCount = int(req.media["PlayerCount"])
-            computerCount = int(req.media.get("ComputerCount", None))
-            player = self._playerManager.GetPlayerInfo(info["Name"])
-            code, roundId = self._gameManager.CreateRound(player, mineCount, width, height, playerCount,
-                                                          computerCount)
-            self._setRespMsg(resp, code, RoundId=roundId)
-        except ValueError:
-            self._setRespMsg(resp, Code.PARAMS_ERROR)
-
-    def on_post_Open(self, req, resp):
-        if not self._isValidRequest(req):
-            resp.status = 401
-            return
-
-        self._processPlayerAction(req, resp, "Open")
-
-    def on_post_SetFlag(self, req, resp):
-        if not self._isValidRequest(req):
-            resp.status = 401
-            return
-
-        self._processPlayerAction(req, resp, "SetFlag")
-
-    def on_get_GetJoinedRound(self, req, resp):
-        if not self._isValidRequest(req):
-            resp.status = 401
-            return
-
-        info = self._getTokenInfo(req, resp)
-        if info is None:
-            return
-
-        player = self._playerManager.GetPlayerInfo(info["Name"])
-        roundInfo = self._gameManager.GetJoinedRound(player)
-
-        if roundInfo is None:
-            self._setRespMsg(resp, -104)
-        else:
-            self._setRespMsg(resp, 0, data=roundInfo)
-
-    def on_post_Surrender(self, req, resp):
-        if not self._isValidRequest(req):
-            resp.status = 401
-            return
-
-        info = self._getTokenInfo(req, resp)
-        if info is None:
-            return
-
-        player = self._playerManager.GetPlayerInfo(info["Name"])
-
-        code = self._gameManager.Surrender(player)
-        self._setRespMsg(resp, code)
-
-    def on_post_Register(self, req, resp):
-        if not self._isValidRequest(req):
-            resp.status = 401
-            return
-
-        name = req.media.get("Name", None)
-        password = req.media.get("Password", None)
-        if name is None or password is None:
-            self._setRespMsg(resp, -105)
-            return
-
-        if not self._playerManager.Create(name) or not self._accountManager.Create(name, password):
-            return self._setRespMsg(resp, -109)
-        self._setRespMsg(resp, 0)
-
-    def _getTokenInfo(self, req, resp):
-        token = req.headers.get("Authorization".upper(), None)
-        if token is None:
-            resp.status = 401
-            return None
-
-        tokenInfo = self._accountManager.DecodeToken(token)
-        if tokenInfo is None:
-            resp.status = 401
-            return None
-
-        return tokenInfo
-
-    def _setRespMsg(self, resp, code, status=200, **kwargs):
-        resp.status = status
+    def _setRespMsg(self, resp, code, **kwargs):
+        resp.status = falcon.HTTP_OK
         resp.headers["Content-type"] = "application/json"
         rtn = {
             "Code": code,
@@ -176,25 +66,6 @@ class Dispatcher(object):
             rtn[k] = v
 
         resp.media = rtn
-
-    def _getPosition(self, req):
-        x = req.media.get("X", None)
-        y = req.media.get("Y", None)
-        return None if x is None or y is None else (x, y)
-
-    def _processPlayerAction(self, req, resp, action):
-        info = self._getTokenInfo(req, resp)
-        if info is None:
-            return
-
-        player = self._playerManager.GetPlayerInfo(info["Name"])
-        position = self._getPosition(req)
-        if position is None:
-            self._setRespMsg(resp, -105)
-            return
-
-        code = self._gameManager.ProcessAction(player, action, position)
-        self._setRespMsg(resp, code)
 
     def _isValidRequest(self, req):
         checkSum = req.headers.get("CheckSum".upper(), None)

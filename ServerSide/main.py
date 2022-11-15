@@ -1,9 +1,15 @@
-import os
 import waitress as waitress
-import app
 from gevent import monkey
+from AccountManager import AccountManager
+from Dispatcher import Dispatcher
+from RoundManager import RoundManager
 
 monkey.patch_all()
 
 if __name__ == "__main__":
-    waitress.serve(app.app, host='0.0.0.0', port='6060')
+    accountManager = AccountManager()
+    roundManager = RoundManager(accountManager)
+    dispatcher = Dispatcher(accountManager.IsValidToken,
+                            accountManager,
+                            roundManager)
+    waitress.serve(dispatcher.Api, host='0.0.0.0', port='6060')
