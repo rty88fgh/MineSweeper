@@ -1,7 +1,7 @@
 import random
 
 
-class GridManager(object):
+class GridContainer(object):
     FLAG_CORRECT = 50
     FLAG_ERROR = -75
     CLICK_MINE = -250
@@ -48,9 +48,9 @@ class GridManager(object):
         isMine = grid["IsMine"]
 
         if is_clicked:
-            score += GridManager.CLICK_MINE if isMine else grid["MineCount"]
+            score += GridContainer.CLICK_MINE if isMine else grid["MineCount"]
         else:
-            score += GridManager.FLAG_CORRECT if isMine else GridManager.FLAG_ERROR
+            score += GridContainer.FLAG_CORRECT if isMine else GridContainer.FLAG_ERROR
 
         return score
 

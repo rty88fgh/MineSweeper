@@ -28,7 +28,7 @@ class AccountDao(IDao):
 
     def DeleteByName(self, name):
         accounts = json.load(open(AccountDao.PLAYER_INFO_FILE, "r"))
-        account = next((a for a in accounts if a["name"] == name), None)
+        account = next((a for a in accounts if a["Name"] == name), None)
         if account is None:
             return None
         del accounts[account]

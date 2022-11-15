@@ -3,7 +3,7 @@ import threading
 import time
 import gevent
 from Computer import Computer
-from GridManager import GridManager
+from GridContainer import GridContainer
 
 
 class Game(object):
@@ -140,7 +140,7 @@ class Game(object):
                 break
 
     def _startGame(self):
-        self._gridManager = GridManager(self._width, self._height, self.MineCount)
+        self._gridManager = GridContainer(self._width, self._height, self.MineCount)
         for player in self._players:
             player.ResetScore()
         self._currentPlayer = 0
