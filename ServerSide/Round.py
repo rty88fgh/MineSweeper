@@ -6,14 +6,14 @@ from Computer import Computer
 from GridContainer import GridContainer
 
 
-class Game(object):
+class Round(object):
     STATE = ["Init", "Playing", "End"]
 
     def __init__(self, width, height, mineCount, playerCount, computerCount):
         self._computerThread = None
         self._players = []
         self._gridManager = None
-        self._state = Game.STATE[0]
+        self._state = Round.STATE[0]
         self._currentPlayer = 0
         self.MineCount = mineCount
         self._width = width
@@ -29,7 +29,7 @@ class Game(object):
         if fromState is None:
             fromState = self.GetState()
 
-        if toState not in Game.STATE or fromState not in Game.STATE:
+        if toState not in Round.STATE or fromState not in Round.STATE:
             return
         if not ((fromState == "Init" and toState == "Playing") or
                 (fromState == "Playing" and toState == "End")):
@@ -38,6 +38,9 @@ class Game(object):
 
     def GetState(self):
         return self._state
+
+    def GetPlayers(self):
+        return [p for p in self._players]
 
     def Join(self, player):
         allPlayers = [p.GetName() for p in self._players]
@@ -70,9 +73,9 @@ class Game(object):
         if not self._gridManager.IsValidGrid(position):
             return -107
 
-        if str(action) == "Open":
+        if str(action) == "OpenGrid":
             score = self._gridManager.RevealGrid(position)
-        elif str(action) == "SetFlag":
+        elif str(action) == "SetFlagGrid":
             score = self._gridManager.MarkGrid(position)
         else:
             return -108
@@ -83,7 +86,7 @@ class Game(object):
         if self._gridManager.IsAllGridsClicked():
             self._setState("End")
             self._winner = next(p for p in sorted([copy.copy(p) for p in self._players],
-                                                  key=lambda player: player.GetScore(),
+                                                  key=lambda p: p.GetScore(),
                                                   reverse=True)).GetName()
 
         self._lastUpdateTime = time.time()
@@ -150,10 +153,12 @@ class Game(object):
         self._lastUpdateTime = time.time()
 
     def _computerRun(self):
-        while self.GetState() != "End":
+        while True:
             gevent.sleep(1)
             if not self._players[self._currentPlayer].IsComputer():
                 continue
+            if self.GetState() == "End":
+                break
             computerInfo = self._players[self._currentPlayer]
             action, pos = computerInfo.ProcessAction()
             self.ProcessPlayerAction(computerInfo, action, pos)

@@ -7,9 +7,10 @@ from RoundManager import RoundManager
 monkey.patch_all()
 
 if __name__ == "__main__":
-    accountManager = AccountManager()
-    roundManager = RoundManager(accountManager)
-    dispatcher = Dispatcher(accountManager.IsValidToken,
-                            accountManager,
-                            roundManager)
+    dispatcher = Dispatcher()
+    accountManager = AccountManager(dispatcher.Register)
+    roundManager = RoundManager(accountManager, dispatcher.Register)
+    dispatcher.SetAuthFunc(accountManager.IsValidToken)
+
     waitress.serve(dispatcher.Api, host='0.0.0.0', port='6060')
+

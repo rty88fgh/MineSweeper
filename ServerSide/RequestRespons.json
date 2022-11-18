@@ -23,23 +23,8 @@
     "Response": [
       {
         "RoundId": "number",
-        "Grids": {
-          "X": "number",
-          "Y": "number",
-          "IsMine": "boolean",
-          "IsFlag": "boolean",
-          "IsMineClicked": "boolean",
-          "MineCount": "number",
-          "IsOpen": "boolean"
-        },
         "Players": "string[]",
-        "Current": "string",
-        "ScoreMsg": "string[]",
-        "Status": "string",
-        "Width": "number",
-        "Height": "number",
-        "Winner": "string",
-        "LastUpdateTime": "number"
+        "Status": "string"
       }
     ]
   },
@@ -57,7 +42,7 @@
   },
   "Join": {
     "Request": {
-      "Id": "number"
+      "RoundId": "number"
     },
     "Response": {
       "Code": "number"
@@ -69,7 +54,7 @@
       "Code": "number"
     }
   },
-  "Open": {
+  "OpenGrid": {
     "Request": {
       "X": "number",
       "Y": "number"
@@ -78,7 +63,7 @@
       "Code": "number"
     }
   },
-  "SetFlag": {
+  "SetFlagGrid": {
     "Request": {
       "X": "number",
       "Y": "number"
@@ -94,7 +79,9 @@
     }
   },
   "GetJoinedRound": {
-    "Request": {},
+    "Request": {
+      "RoundId": "number"
+    },
     "Response": {
       "Grids": {
         "X": "number",

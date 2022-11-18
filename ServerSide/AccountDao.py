@@ -1,37 +1,17 @@
-import json
-from IDao import IDao
+from FileDao import FileDao
 
 
-class AccountDao(IDao):
-    PLAYER_INFO_FILE = "Account.json"
+class AccountDao(object):
+    def __init__(self):
+        self._dao = FileDao()
 
-    def Insert(self, name, password):
-        accounts = json.load(open(AccountDao.PLAYER_INFO_FILE, "r"))
-        account = self.FindByName(name)
-        if account is not None:
-            return None
-        account = {
+    def CreateAccount(self, name, password):
+        data = {
             "Name": name,
-            "Password": password,
+            "Password": password
         }
-        accounts.append(account)
-        fp = open(AccountDao.PLAYER_INFO_FILE, "w+")
-        fp.write(json.dumps(accounts))
-        return account
 
-    def FindAll(self):
-        return json.load(open(AccountDao.PLAYER_INFO_FILE, "r"))
+        return self._dao.Insert(name, data)
 
-    def FindByName(self, name):
-        accounts = json.load(open(AccountDao.PLAYER_INFO_FILE, "r"))
-        return next((a for a in accounts if a["Name"] == name), None)
-
-    def DeleteByName(self, name):
-        accounts = json.load(open(AccountDao.PLAYER_INFO_FILE, "r"))
-        account = next((a for a in accounts if a["Name"] == name), None)
-        if account is None:
-            return None
-        del accounts[account]
-        fp = open(AccountDao.PLAYER_INFO_FILE, "w+")
-        fp.write(json.dumps(accounts))
-        return account
+    def FindAccount(self, name):
+        return self._dao.FindByKey(name)

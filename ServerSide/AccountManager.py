@@ -1,25 +1,16 @@
-import hashlib
-
 import jwt
-
 from AccountDao import AccountDao
-from ManagerBase import ManagerBase
 from Player import Player
 
 
-class AccountManager(ManagerBase):
+class AccountManager(object):
     SECRET_KEY = "IGS"
 
-    def __init__(self):
-        super(AccountManager, self).__init__()
+    def __init__(self, registerFunc):
         self._dao = AccountDao()
         self._tokens = []
-        self.RegisterProcessMethod('Login', 'Post', self._login, useAuth=False)
-        self.RegisterProcessMethod('Register', 'Post', self._create, useAuth=False)
-
-    def Process(self, **kwargs):
-        funcName = kwargs['FuncName']
-        return self.AllProcessMethod[funcName]['_func'](**kwargs)
+        registerFunc('Login', self._login, useAuth=False)
+        registerFunc('Register', self._create, useAuth=False)
 
     def GetPlayerInfoByToken(self, token):
         info = self._decodeToken(token)
@@ -32,7 +23,7 @@ class AccountManager(ManagerBase):
 
     def _login(self, **kwargs):
         name, password = kwargs['Name'], kwargs['Password']
-        account = self._dao.FindByName(name)
+        account = self._dao.FindAccount(name)
         isSuccess = not (account is None or account["Password"] != password)
         if not isSuccess:
             return -110, None
@@ -42,15 +33,15 @@ class AccountManager(ManagerBase):
 
     def _create(self, **kwargs):
         name, password = kwargs['Name'], kwargs['Password']
-        player = self._dao.FindByName(name)
+        player = self._dao.FindAccount(name)
         if player is not None:
             return -109, None
 
-        self._dao.Insert(name, password)
+        self._dao.CreateAccount(name, password)
         return 0, None
 
     def _getPlayerInfoByName(self, name):
-        playerInfo = self._dao.FindByName(name)
+        playerInfo = self._dao.FindAccount(name)
         return None if playerInfo is None else Player(playerInfo["Name"])
 
     def _encodeToken(self, name):

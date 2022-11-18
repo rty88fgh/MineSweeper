@@ -98,14 +98,14 @@ class Dispatcher(object):
             resp.status = 401
             return
 
-        self._processPlayerAction(req, resp, "Open")
+        self._processPlayerAction(req, resp, "OpenGrid")
 
     def on_post_SetFlag(self, req, resp):
         if not self._isValidRequest(req):
             resp.status = 401
             return
 
-        self._processPlayerAction(req, resp, "SetFlag")
+        self._processPlayerAction(req, resp, "SetFlagGrid")
 
     def on_get_GetJoinedRound(self, req, resp):
         if not self._isValidRequest(req):

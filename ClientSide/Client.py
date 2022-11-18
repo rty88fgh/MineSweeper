@@ -13,14 +13,16 @@ class Client(object):
         self._playerName = ""
         self._lastUpdateTime = 0
         self._token = None
+        self._joinedRoundId = None
         self._codeDict = {
-            100: "{} joined back".format(self._playerName),
-            -100: "{} has joined other game.".format(self._playerName),
+            100: "Player joined back",
+            -100: "Player has joined other game.",
             -101: "RoundId did not found.",
             -103: "Round is not playing",
-            -102: "RoundId:{} status isn't Init",
-            -104: "{} did not join round".format(self._playerName),
+            -102: "Joined round cannot leave",
+            -104: "Player did not join round",
             -105: "Parameter error",
+            -106: "It not your turn",
             -107: "Position error",
             -109: "Player name is duplicate.",
             -110: "Login Failed"
@@ -36,7 +38,7 @@ class Client(object):
                 break
 
         while True:
-            resp = self._sendService("/Round_GetAllRound", requests.get)
+            resp = self._sendService("/GetAllRound", requests.post)
 
             if resp is None or resp['Code'] < 0:
                 print "Failed to get all rounds. It will retry 1 sec..."
@@ -66,7 +68,10 @@ class Client(object):
 
         isInit = False
         while True:
-            resp = self._sendService("/Round_GetJoinedRound", requests.get, printLog=False)
+            resp = self._sendService("/GetRoundData",
+                                     requests.post,
+                                     data={"RoundId": self._joinedRoundId},
+                                     printLog=False)
 
             if resp is None:
                 print "Failed to get joined round. It will retry 1 sec..."
@@ -99,10 +104,10 @@ class Client(object):
                 self._view.CloseWindows()
                 return
             elif action == View.Surrender:
-                self._sendService("/Round_Surrender", requests.post, )
+                self._sendService("/Surrender", requests.post, )
                 continue
 
-            self._sendService("/Round_" + action, requests.post, data={
+            self._sendService("/" + action, requests.post, data={
                 "X": pos[0],
                 "Y": pos[1],
             }, printLog=False)
@@ -113,7 +118,7 @@ class Client(object):
         algo = md5()
         algo.update(password)
 
-        resp = self._sendService("/Account_Register", requests.post, data={
+        resp = self._sendService("/Register", requests.post, data={
             "Name": name,
             "Password": algo.hexdigest()
         }, useAuth=False)
@@ -132,7 +137,7 @@ class Client(object):
         algo = md5()
         algo.update(password)
 
-        resp = self._sendService("/Account_Login", requests.post, data={
+        resp = self._sendService("/Login", requests.post, data={
             "Name": name,
             "Password": algo.hexdigest()
         }, useAuth=False)
@@ -149,7 +154,7 @@ class Client(object):
         mineCount = self._view.GetPlayerAnswer("Please enter mine count (1 ~ 20, default: 9):", 9)
         playerCount = self._view.GetPlayerAnswer("Please enter player count (default: 2):", 2)
         computerCount = self._view.GetPlayerAnswer("Please enter computer count (default: 0):", 0)
-        resp = self._sendService("/Round_Create", requests.post, data={
+        resp = self._sendService("/Create", requests.post, data={
             "Width": widthCount,
             "Height": heightCount,
             "MineCount": mineCount,
@@ -157,7 +162,8 @@ class Client(object):
             "ComputerCount": computerCount
         })
         if resp["Code"] >= 0:
-            print "RoundId:{}".format(resp["RoundId"])
+            self._joinedRoundId = resp["RoundId"]
+            print "RoundId:{}".format(self._joinedRoundId)
 
         return False if resp is None else resp["Code"] >= 0
 
@@ -169,14 +175,17 @@ class Client(object):
             elif roundId in allIds:
                 break
             print "Please enter valid game id."
-        resp = self._sendService("/Round_Join", requests.post, data={
+        resp = self._sendService("/Join", requests.post, data={
             "RoundId": roundId
         })
+
+        if resp["Code"] >= 0:
+            self._joinedRoundId = resp["RoundId"]
 
         return False if resp is None else resp["Code"] >= 0
 
     def _leftGame(self):
-        resp = self._sendService("/Round_Leave", requests.post)
+        resp = self._sendService("/Leave", requests.post)
 
         return False if resp is None else resp["Code"] >= 0
 
@@ -198,7 +207,8 @@ class Client(object):
         headers["CheckSum"] = hashAlgo.hexdigest()
         headers["content-Type"] = "application/json"
         try:
-            resp = method(Client.ServerUrl + url, data=json.dumps(data), headers=headers)
+            # data for post, params for get
+            resp = method(Client.ServerUrl + url, data=json.dumps(data), params=data, headers=headers)
             if len(resp.content) == 0:
                 print "Send service error. Status:{}".format(resp.status_code)
                 return None

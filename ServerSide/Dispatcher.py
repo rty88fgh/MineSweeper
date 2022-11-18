@@ -3,32 +3,17 @@ from hashlib import md5
 
 
 class Dispatcher(object):
-    def __init__(self, _isValidTokenFunc, *managers):
+    def __init__(self):
         self.Api = falcon.API()
         self._managers = {}
-        self._registerAPI(managers)
-        self._isValidTokenFunc = _isValidTokenFunc
-
-    def on_get(self, req, resp):
-        self._processClientRequest(req, resp, 'Get')
+        self._isValidTokenFunc = None
+        self._apiInfo = {}
 
     def on_post(self, req, resp):
-        self._processClientRequest(req, resp, 'Post')
+        funcInfo = self._apiInfo.get(req.path)
 
-    def _processClientRequest(self, req, resp, method):
-        splits = req.path.replace('/', '').split('_')
-        if splits[0] not in self._managers.keys():
-            resp.status = 404
-            return
-
-        manager = self._managers[splits[0]]
-        funcInfo = next((info for info in manager.GetAllProcessInfo() if info['Name'] == splits[1]), None)
         if funcInfo is None:
             resp.status = falcon.HTTP_NOT_FOUND
-            return
-
-        if funcInfo['Method'] != method:
-            resp.status = falcon.HTTP_METHOD_NOT_ALLOWED
             return
 
         if not self._isValidRequest(req):
@@ -42,19 +27,26 @@ class Dispatcher(object):
                 resp.status = falcon.HTTP_UNAUTHORIZED
                 return
 
-        code, returnValues = manager.Process(Token=token,
-                                             FuncName=funcInfo['Name'],
-                                             **({} if req.media is None else req.media))
+        code, returnValues = funcInfo['Callback'](Token=token,
+                                                  Path=req.path,
+                                                  **({} if req.media is None else req.media))
 
         self._setRespMsg(resp, code, **({} if returnValues is None else returnValues))
 
-    def _registerAPI(self, managers):
-        for g in managers:
-            name = type(g).__name__.replace('Manager', '')
+    def SetAuthFunc(self, isValidTokenFunc):
+        self._isValidTokenFunc = isValidTokenFunc
 
-            for info in g.GetAllProcessInfo():
-                self.Api.add_route("/{}_{}".format(name, info['Name']), self)
-            self._managers[name] = g
+    def Register(self, name, callback, useAuth=True, namespace=None):
+        path = '/{}{}'.format((namespace + '/') if namespace is not None else '', name)
+        if path in self._apiInfo.keys():
+            print "{} has been register.".format(path)
+            return
+
+        self.Api.add_route(path, self)
+        self._apiInfo[path] = {
+            'Callback': callback,
+            'UseAuth': useAuth,
+        }
 
     def _setRespMsg(self, resp, code, **kwargs):
         resp.status = falcon.HTTP_OK

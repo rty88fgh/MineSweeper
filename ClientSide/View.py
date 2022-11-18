@@ -30,8 +30,8 @@ class View(object):
         "Grid": pygame.image.load("Sprite/Grid.png"),
         "Gameover": pygame.image.load("Sprite/gameover.png")
     }
-    Open = "Open"
-    SetFlag = "SetFlag"
+    Open = "OpenGrid"
+    SetFlag = "SetFlagGrid"
     Surrender = "Surrender"
     Quit = "Quit"
     LeftButton = 1
