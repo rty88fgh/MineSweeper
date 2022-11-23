@@ -7,16 +7,17 @@ class RoundManager(object):
         self._nextRoundId = 1
         self._accountManager = accountManager
         self._allRounds = {}
-        registerFunc('Create', self._create)
-        registerFunc('GetAllRound', self._getAllRound)
-        registerFunc('Join', self._join)
-        registerFunc('Leave', self._leave)
-        registerFunc('GetRoundData', self._getRoundData)
-        registerFunc('OpenGrid', self._processAction)
-        registerFunc('SetFlagGrid', self._processAction)
-        registerFunc('Surrender', self._surrender)
+        namespace = "Round"
+        registerFunc('Create', self.OnCreate, namespace=namespace)
+        registerFunc('GetAllRound', self.OnGetAllRound, namespace=namespace)
+        registerFunc('Join', self.OnJoin, namespace=namespace)
+        registerFunc('Leave', self.OnLeave, namespace=namespace)
+        registerFunc('GetRoundData', self.OnGetRoundData, namespace=namespace)
+        registerFunc('OpenGrid', self.OnProcessAction, namespace=namespace)
+        registerFunc('SetFlagGrid', self.OnProcessAction, namespace=namespace)
+        registerFunc('Surrender', self.OnSurrender, namespace=namespace)
 
-    def _join(self, **kwargs):
+    def OnJoin(self, **kwargs):
         roundId = kwargs['RoundId']
         player = self._accountManager.GetPlayerInfoByToken(kwargs['Token'])
         name = player.GetName()
@@ -34,7 +35,7 @@ class RoundManager(object):
         code = game.Join(player)
         return code, {"RoundId": roundId if code >= 0 else None}
 
-    def _leave(self, **kwargs):
+    def OnLeave(self, **kwargs):
         player = self._accountManager.GetPlayerInfoByToken(kwargs['Token'])
         name = player.GetName()
         if name not in self._allPlayers:
@@ -44,7 +45,7 @@ class RoundManager(object):
         code = game.Leave(player)
         return code, None
 
-    def _getAllRound(self, **kwargs):
+    def OnGetAllRound(self, **kwargs):
         result = []
         for roundId, game in [(k, v) for k, v in self._allRounds.items() if v.GetState() != "End"]:
             result.append({
@@ -55,7 +56,7 @@ class RoundManager(object):
 
         return 0, {'Data': result}
 
-    def _create(self, **kwargs):
+    def OnCreate(self, **kwargs):
         player = self._accountManager.GetPlayerInfoByToken(kwargs['Token'])
         width, height, = kwargs['Width'], kwargs['Height']
         mineCount, playerCount, computerCount = kwargs['MineCount'], kwargs['PlayerCount'], kwargs['ComputerCount']
@@ -79,17 +80,17 @@ class RoundManager(object):
         self._getAllPlayers()[player.GetName()] = game
         return 0, {'RoundId': roundId}
 
-    def _processAction(self, **kwargs):
+    def OnProcessAction(self, **kwargs):
         player = self._accountManager.GetPlayerInfoByToken(kwargs['Token'])
         x, y = kwargs['X'], kwargs['Y']
-        action = kwargs['Path'].replace("/", "")
+        action = kwargs['Path'].split("/").pop()
         if player.GetName() not in self._getAllPlayers():
             return -104, None
 
         game = self._getAllPlayers()[player.GetName()]
         return game.ProcessPlayerAction(player, action, (x, y)), None
 
-    def _getRoundData(self, **kwargs):
+    def OnGetRoundData(self, **kwargs):
         roundId = kwargs.get('RoundId', None)
         if roundId is None or roundId not in self._allRounds:
             return -105, None
@@ -97,7 +98,7 @@ class RoundManager(object):
         game = self._allRounds[roundId]
         return 0, {'Data': game.GetInfo()}
 
-    def _surrender(self, **kwargs):
+    def OnSurrender(self, **kwargs):
         player = self._accountManager.GetPlayerInfoByToken(kwargs['Token'])
         if player.GetName() not in self._getAllPlayers():
             return -104, None

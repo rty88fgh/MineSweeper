@@ -9,8 +9,9 @@ class AccountManager(object):
     def __init__(self, registerFunc):
         self._dao = AccountDao()
         self._tokens = []
-        registerFunc('Login', self._login, useAuth=False)
-        registerFunc('Register', self._create, useAuth=False)
+        namespace = "Account"
+        registerFunc('Login', self.OnLogin, useAuth=False, namespace=namespace)
+        registerFunc('Register', self.OnCreate, useAuth=False, namespace=namespace)
 
     def GetPlayerInfoByToken(self, token):
         info = self._decodeToken(token)
@@ -21,7 +22,7 @@ class AccountManager(object):
     def IsValidToken(self, token):
         return self._decodeToken(token) is not None
 
-    def _login(self, **kwargs):
+    def OnLogin(self, **kwargs):
         name, password = kwargs['Name'], kwargs['Password']
         account = self._dao.FindAccount(name)
         isSuccess = not (account is None or account["Password"] != password)
@@ -31,14 +32,16 @@ class AccountManager(object):
         player = self._getPlayerInfoByName(name)
         return 0, {"Token": self._encodeToken(player.GetName())}
 
-    def _create(self, **kwargs):
+    def OnCreate(self, **kwargs):
         name, password = kwargs['Name'], kwargs['Password']
         player = self._dao.FindAccount(name)
         if player is not None:
             return -109, None
-
-        self._dao.CreateAccount(name, password)
-        return 0, None
+        try:
+            result = self._dao.CreateAccount(name, password)
+            return 0 if result else -109, None
+        except:
+            return -111, None
 
     def _getPlayerInfoByName(self, name):
         playerInfo = self._dao.FindAccount(name)
@@ -58,4 +61,3 @@ class AccountManager(object):
             return jwt.decode(token, key=AccountManager.SECRET_KEY)
         except:
             return None
-

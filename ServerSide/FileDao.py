@@ -5,10 +5,12 @@ from IDao import IDao
 
 
 class FileDao(IDao):
-    PLAYER_ROOT = "Players"
+    def __init__(self, root, extension):
+        self._root = root
+        self._extension = extension
 
     def Insert(self, key, data, force=False):
-        path = os.path.join(FileDao.PLAYER_ROOT, key + ".json")
+        path = os.path.join(self._root, key + "." + self._extension)
 
         if not force and os.path.exists(path):
             print "{} is exists".format(key)
@@ -20,19 +22,19 @@ class FileDao(IDao):
 
     def FindAll(self, filterFunc=None):
         result = []
-        for path in os.listdir(FileDao.PLAYER_ROOT):
+        for path in os.listdir(self._root):
             data = json.load(open(path, "r"))
             if filterFunc is None or filterFunc(data):
                 result.append(data)
 
         return result
 
-    def FindByKey(self, key):
-        path = os.path.join(FileDao.PLAYER_ROOT, key + ".json")
+    def Find(self, key):
+        path = os.path.join(self._root, key + "." + self._extension)
         return json.load(open(path, "r")) if os.path.exists(path) else None
 
-    def DeleteByKey(self, key):
-        path = os.path.join(FileDao.PLAYER_ROOT, key + ".json")
+    def Delete(self, key):
+        path = os.path.join(self._root, key + "." + self._extension)
         if not os.path.exists(path):
             return False
 

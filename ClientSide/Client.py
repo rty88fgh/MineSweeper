@@ -25,7 +25,8 @@ class Client(object):
             -106: "It not your turn",
             -107: "Position error",
             -109: "Player name is duplicate.",
-            -110: "Login Failed"
+            -110: "Login Failed",
+            -111: "Error while create account",
         }
 
     def Run(self):
@@ -38,7 +39,7 @@ class Client(object):
                 break
 
         while True:
-            resp = self._sendService("/GetAllRound", requests.post)
+            resp = self._sendService("/Round/GetAllRound", requests.post)
 
             if resp is None or resp['Code'] < 0:
                 print "Failed to get all rounds. It will retry 1 sec..."
@@ -68,7 +69,7 @@ class Client(object):
 
         isInit = False
         while True:
-            resp = self._sendService("/GetRoundData",
+            resp = self._sendService("/Round/GetRoundData",
                                      requests.post,
                                      data={"RoundId": self._joinedRoundId},
                                      printLog=False)
@@ -104,10 +105,10 @@ class Client(object):
                 self._view.CloseWindows()
                 return
             elif action == View.Surrender:
-                self._sendService("/Surrender", requests.post, )
+                self._sendService("/Round/Surrender", requests.post, )
                 continue
 
-            self._sendService("/" + action, requests.post, data={
+            self._sendService("/Round/" + action, requests.post, data={
                 "X": pos[0],
                 "Y": pos[1],
             }, printLog=False)
@@ -118,7 +119,7 @@ class Client(object):
         algo = md5()
         algo.update(password)
 
-        resp = self._sendService("/Register", requests.post, data={
+        resp = self._sendService("/Account/Register", requests.post, data={
             "Name": name,
             "Password": algo.hexdigest()
         }, useAuth=False)
@@ -137,7 +138,7 @@ class Client(object):
         algo = md5()
         algo.update(password)
 
-        resp = self._sendService("/Login", requests.post, data={
+        resp = self._sendService("/Account/Login", requests.post, data={
             "Name": name,
             "Password": algo.hexdigest()
         }, useAuth=False)
@@ -154,7 +155,7 @@ class Client(object):
         mineCount = self._view.GetPlayerAnswer("Please enter mine count (1 ~ 20, default: 9):", 9)
         playerCount = self._view.GetPlayerAnswer("Please enter player count (default: 2):", 2)
         computerCount = self._view.GetPlayerAnswer("Please enter computer count (default: 0):", 0)
-        resp = self._sendService("/Create", requests.post, data={
+        resp = self._sendService("/Round/Create", requests.post, data={
             "Width": widthCount,
             "Height": heightCount,
             "MineCount": mineCount,
@@ -175,7 +176,7 @@ class Client(object):
             elif roundId in allIds:
                 break
             print "Please enter valid game id."
-        resp = self._sendService("/Join", requests.post, data={
+        resp = self._sendService("/Round/Join", requests.post, data={
             "RoundId": roundId
         })
 
@@ -185,7 +186,7 @@ class Client(object):
         return False if resp is None else resp["Code"] >= 0
 
     def _leftGame(self):
-        resp = self._sendService("/Leave", requests.post)
+        resp = self._sendService("/Round/Leave", requests.post)
 
         return False if resp is None else resp["Code"] >= 0
 

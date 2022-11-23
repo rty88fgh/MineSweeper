@@ -27,26 +27,27 @@ class Dispatcher(object):
                 resp.status = falcon.HTTP_UNAUTHORIZED
                 return
 
-        code, returnValues = funcInfo['Callback'](Token=token,
-                                                  Path=req.path,
-                                                  **({} if req.media is None else req.media))
+        code, outParam = funcInfo['Callback'](Token=token,
+                                              Path=req.path,
+                                              **({} if req.media is None else req.media))
 
-        self._setRespMsg(resp, code, **({} if returnValues is None else returnValues))
+        self._setRespMsg(resp, code, **({} if outParam is None else outParam))
 
     def SetAuthFunc(self, isValidTokenFunc):
         self._isValidTokenFunc = isValidTokenFunc
 
     def Register(self, name, callback, useAuth=True, namespace=None):
-        path = '/{}{}'.format((namespace + '/') if namespace is not None else '', name)
-        if path in self._apiInfo.keys():
-            print "{} has been register.".format(path)
-            return
+        url = '/{}{}'.format((namespace + '/') if namespace is not None else '', name)
+        if url in self._apiInfo.keys():
+            print "{} has been register.".format(url)
+            return False
 
-        self.Api.add_route(path, self)
-        self._apiInfo[path] = {
+        self.Api.add_route(url, self)
+        self._apiInfo[url] = {
             'Callback': callback,
             'UseAuth': useAuth,
         }
+        return True
 
     def _setRespMsg(self, resp, code, **kwargs):
         resp.status = falcon.HTTP_OK

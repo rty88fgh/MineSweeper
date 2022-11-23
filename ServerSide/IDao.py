@@ -13,11 +13,11 @@ class IDao:
         pass
 
     @abstractmethod
-    def FindByKey(self, key):
+    def Find(self, key):
         pass
 
     @abstractmethod
-    def DeleteByKey(self, key):
+    def Delete(self, key):
         pass
 
 
