@@ -10,7 +10,7 @@ class Dispatcher(object):
         self._apiInfo = {}
 
     def on_post(self, req, resp):
-        funcInfo = self._apiInfo.get(req.path)
+        funcInfo = self._getApiInfo(req.path)
 
         if funcInfo is None:
             resp.status = falcon.HTTP_NOT_FOUND
@@ -36,18 +36,33 @@ class Dispatcher(object):
     def SetAuthFunc(self, isValidTokenFunc):
         self._isValidTokenFunc = isValidTokenFunc
 
-    def Register(self, name, callback, useAuth=True, namespace=None):
-        url = '/{}{}'.format((namespace + '/') if namespace is not None else '', name)
+    def Register(self, path, callback, useAuth=True, namespace=None):
+        url = ("/" + namespace if namespace is not None else "") + "/" + path
         if url in self._apiInfo.keys():
             print "{} has been register.".format(url)
             return False
 
         self.Api.add_route(url, self)
-        self._apiInfo[url] = {
+        self._setApiInfo(path, namespace, {
             'Callback': callback,
             'UseAuth': useAuth,
-        }
+        })
         return True
+
+    def _getApiInfo(self, url):
+        hierarchyPath = url.split('/')
+
+        path = "/" + hierarchyPath[len(hierarchyPath) - 1]
+        namespace = url.replace(path, "")
+
+        return self._apiInfo[namespace].get(path, None) if namespace in self._apiInfo else None
+
+    def _setApiInfo(self, path, namespace, data):
+        namespaceUrl = "/" + namespace
+        pathUrl = "/" + path
+        nsInfo = self._apiInfo.get(namespaceUrl if namespace is not None else "", {})
+        nsInfo[pathUrl] = data
+        self._apiInfo[namespaceUrl] = nsInfo
 
     def _setRespMsg(self, resp, code, **kwargs):
         resp.status = falcon.HTTP_OK
