@@ -6,7 +6,7 @@ class Dispatcher(object):
     def __init__(self):
         self.Api = falcon.API()
         self._managers = {}
-        self._isValidTokenFunc = None
+        self._accountManager = None
         self._apiInfo = {}
 
     def on_post(self, req, resp):
@@ -22,19 +22,19 @@ class Dispatcher(object):
 
         token = None
         if funcInfo['UseAuth']:
-            token = req.headers.get("Authorization".upper(), None)
-            if token is None or not self._isValidTokenFunc(token):
+            token = req.headers.get("Authorization".upper())
+            if token is None or not self._accountManager.IsValidToken(token):
                 resp.status = falcon.HTTP_UNAUTHORIZED
                 return
-
+        self._accountManager.RefreshToken(token)
         code, outParam = funcInfo['Callback'](Token=token,
                                               Path=req.path,
                                               **({} if req.media is None else req.media))
 
         self._setRespMsg(resp, code, **({} if outParam is None else outParam))
 
-    def SetAuthFunc(self, isValidTokenFunc):
-        self._isValidTokenFunc = isValidTokenFunc
+    def SetAccountManager(self, accountManager):
+        self._accountManager = accountManager
 
     def Register(self, path, callback, useAuth=True, namespace=None):
         url = ("/" + namespace if namespace is not None else "") + "/" + path
@@ -55,7 +55,7 @@ class Dispatcher(object):
         path = "/" + hierarchyPath[len(hierarchyPath) - 1]
         namespace = url.replace(path, "")
 
-        return self._apiInfo[namespace].get(path, None) if namespace in self._apiInfo else None
+        return self._apiInfo[namespace].get(path) if namespace in self._apiInfo else None
 
     def _setApiInfo(self, path, namespace, data):
         namespaceUrl = "/" + namespace
@@ -75,7 +75,7 @@ class Dispatcher(object):
         resp.media = rtn
 
     def _isValidRequest(self, req):
-        checkSum = req.headers.get("CheckSum".upper(), None)
+        checkSum = req.headers.get("CheckSum".upper())
         if checkSum is None:
             return False
 

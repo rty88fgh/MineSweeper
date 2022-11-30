@@ -7,24 +7,26 @@ class AccountManager(object):
     SECRET_KEY = "IGS"
 
     def __init__(self, registerFunc):
-        self._dao = AccountDao()
-        self._tokens = []
+        self._dao = AccountDao(6000)
         namespace = "Account"
         registerFunc('Login', self.OnLogin, useAuth=False, namespace=namespace)
         registerFunc('Register', self.OnCreate, useAuth=False, namespace=namespace)
 
     def GetPlayerInfoByToken(self, token):
-        info = self._decodeToken(token)
-        if info is None:
-            return None
-        return self.GetPlayerInfoByName(info['Name'])
+        name = self._getName(token)
+        return self.GetPlayerInfoByName(name) if name is not None else None
 
     def GetPlayerInfoByName(self, name):
         playerInfo = self._dao.FindAccount(name)
         return None if playerInfo is None else Player(playerInfo["Name"])
 
     def IsValidToken(self, token):
-        return self._decodeToken(token) is not None
+        name = self._getName(token)
+        return self._dao.GetToken(name) == token if name is not None else False
+
+    def RefreshToken(self, token):
+        name = self._getName(token)
+        return self._dao.RefreshExpireTime(name) if name is not None else False
 
     def OnLogin(self, **kwargs):
         name, password = kwargs['Name'], kwargs['Password']
@@ -51,13 +53,14 @@ class AccountManager(object):
         token = jwt.encode({
             "Name": name,
         }, AccountManager.SECRET_KEY)
-        self._tokens.append(token)
+        self._dao.SetToken(name, token)
         return token
 
-    def _decodeToken(self, token):
+    def _getName(self, token):
         try:
-            if token not in self._tokens:
-                return None
-            return jwt.decode(token, key=AccountManager.SECRET_KEY)
+            info = jwt.decode(token, key=AccountManager.SECRET_KEY)
         except:
             return None
+
+        return info.get("Name") if info is not None else None
+

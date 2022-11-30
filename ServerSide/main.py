@@ -10,7 +10,7 @@ if __name__ == "__main__":
     dispatcher = Dispatcher()
     accountManager = AccountManager(dispatcher.Register)
     roundManager = RoundManager(accountManager, dispatcher.Register)
-    dispatcher.SetAuthFunc(accountManager.IsValidToken)
+    dispatcher.SetAccountManager(accountManager)
 
     waitress.serve(dispatcher.Api, host='0.0.0.0', port='6060')
 

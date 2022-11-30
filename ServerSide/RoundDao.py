@@ -8,10 +8,10 @@ class RoundDao(object):
     def __init__(self):
         self._dao = DbDao("Minesweeper", "Log")
 
-    def SaveLog(self, player, roundId, action, **kwargs):
+    def LogAction(self, player, roundId, action, **kwargs):
         log = {
             "Name": player.GetName(),
-            "roundId": roundId,
+            "RoundId": roundId,
             "Action": action,
             "CreateTime": datetime.datetime.now()
         }

@@ -5,7 +5,7 @@ from IDao import IDao
 class DbDao(IDao):
 
     def __init__(self, database, collection):
-        self._client = MongoClient()
+        self._client = MongoClient("localhost", 27017, maxPoolSize=10)
         self._db = database
         self._collection = collection
 

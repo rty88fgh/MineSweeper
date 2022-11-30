@@ -15,8 +15,8 @@ class Dispatcher(object):
             resp.status = 401
             return
 
-        name = req.media.get("Name", None)
-        password = req.media.get("Password", None)
+        name = req.media.get("Name")
+        password = req.media.get("Password")
         if name is None or password is None:
             self._setRespMsg(resp, -105)
             return
@@ -38,7 +38,7 @@ class Dispatcher(object):
         if info is None:
             return
 
-        roundId = req.media.get("RoundId", None)
+        roundId = req.media.get("RoundId")
         if roundId is None:
             self._setRespMsg(resp, -105)
             return
@@ -85,7 +85,7 @@ class Dispatcher(object):
             width = int(req.media["Width"])
             height = int(req.media["Height"])
             playerCount = int(req.media["PlayerCount"])
-            computerCount = int(req.media.get("ComputerCount", None))
+            computerCount = int(req.media.get("ComputerCount"))
             player = self._playerManager.GetPlayerInfo(info["Name"])
             code, roundId = self._gameManager.CreateRound(player, mineCount, width, height, playerCount,
                                                           computerCount)
@@ -143,8 +143,8 @@ class Dispatcher(object):
             resp.status = 401
             return
 
-        name = req.media.get("Name", None)
-        password = req.media.get("Password", None)
+        name = req.media.get("Name")
+        password = req.media.get("Password")
         if name is None or password is None:
             self._setRespMsg(resp, -105)
             return
@@ -154,7 +154,7 @@ class Dispatcher(object):
         self._setRespMsg(resp, 0)
 
     def _getTokenInfo(self, req, resp):
-        token = req.headers.get("Authorization".upper(), None)
+        token = req.headers.get("Authorization".upper())
         if token is None:
             resp.status = 401
             return None
@@ -178,8 +178,8 @@ class Dispatcher(object):
         resp.media = rtn
 
     def _getPosition(self, req):
-        x = req.media.get("X", None)
-        y = req.media.get("Y", None)
+        x = req.media.get("X")
+        y = req.media.get("Y")
         return None if x is None or y is None else (x, y)
 
     def _processPlayerAction(self, req, resp, action):
@@ -197,7 +197,7 @@ class Dispatcher(object):
         self._setRespMsg(resp, code)
 
     def _isValidRequest(self, req):
-        checkSum = req.headers.get("CheckSum".upper(), None)
+        checkSum = req.headers.get("CheckSum".upper())
         if checkSum is None:
             return False
 

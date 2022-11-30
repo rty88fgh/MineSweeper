@@ -15,7 +15,7 @@ class GridContainer(object):
         relatedPosition = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
         eightGrids = []
         for i in range(len(relatedPosition)):
-            item = self._grids.get((grid["X"] + relatedPosition[i][0], grid["Y"] + relatedPosition[i][1]), None)
+            item = self._grids.get((grid["X"] + relatedPosition[i][0], grid["Y"] + relatedPosition[i][1]))
             if item is not None:
                 eightGrids.append(item)
 
@@ -25,7 +25,7 @@ class GridContainer(object):
         return self._grids
 
     def RevealGrid(self, position):
-        grid = self._grids.get(position, None)
+        grid = self._grids.get(position)
 
         isMine = grid["IsMine"]
         mineCount = grid["MineCount"]
@@ -61,7 +61,7 @@ class GridContainer(object):
         return True
 
     def IsValidGrid(self, position):
-        grid = self._grids.get(position, None)
+        grid = self._grids.get(position)
         if grid is None:
             return False
 

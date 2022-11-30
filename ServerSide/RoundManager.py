@@ -113,7 +113,7 @@ class RoundManager(object):
         return code, None
 
     def OnGetRoundData(self, **kwargs):
-        roundId = kwargs.get('RoundId', None)
+        roundId = kwargs.get('RoundId')
         if roundId is None or roundId not in self._allRounds:
             return -105, None
 
