@@ -70,9 +70,8 @@ class Dispatcher(object):
         rtn = {
             "Code": code,
         }
-        for k, v in kwargs.items():
-            rtn[k] = v
-
+        if kwargs is not None:
+            rtn.update(kwargs)
         resp.media = rtn
 
     def _isValidRequest(self, req):

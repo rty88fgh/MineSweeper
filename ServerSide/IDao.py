@@ -5,19 +5,24 @@ class IDao:
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def Insert(self, key, data, force=False):
+    def Insert(self, data, **kwargs):
         pass
 
     @abstractmethod
-    def FindAll(self, filterFunc=None):
+    def FindAll(self, filterFunc=None, **kwargs):
         pass
 
     @abstractmethod
-    def Find(self, key):
+    def Find(self, key, **kwargs):
         pass
 
     @abstractmethod
-    def Delete(self, key):
+    def Delete(self, key, **kwargs):
         pass
+
+    @abstractmethod
+    def Update(self, key, data, **kwargs):
+        pass
+
 
 

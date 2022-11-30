@@ -37,5 +37,10 @@ class Player(object):
             "IsComputer": self._isComputer
         }
 
+    def Deserialize(self, **kwargs):
+        self._name = kwargs["Name"]
+        self._score = kwargs["Score"]
+        self._isComputer = kwargs["IsComputer"]
+
     def _calcScore(self, value):
         self._score += value

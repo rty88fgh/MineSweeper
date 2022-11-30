@@ -1,9 +1,11 @@
+from DbDao import DbDao
 from FileDao import FileDao
 
 
 class AccountDao(object):
     def __init__(self):
-        self._dao = FileDao("Players", "json")
+        # self._dao = FileDao("Players", "json")
+        self._dao = DbDao("Minesweeper", "Players")
 
     def CreateAccount(self, name, password):
         data = {

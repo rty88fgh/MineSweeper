@@ -9,13 +9,13 @@ from GridContainer import GridContainer
 class Round(object):
     STATE = ["Init", "Playing", "End"]
 
-    def __init__(self, width, height, mineCount, playerCount, computerCount):
+    def __init__(self, width, height, mineCount, playerCount, computerCount, roundId):
         self._computerThread = None
         self._players = []
-        self._gridManager = None
+        self._gridContainer = None
         self._state = Round.STATE[0]
         self._currentPlayer = 0
-        self.MineCount = mineCount
+        self._mineCount = mineCount
         self._width = width
         self._height = height
         self._scoreMsg = {}
@@ -24,6 +24,7 @@ class Round(object):
         self._computerCount = computerCount
         self._winner = None
         self._surrenders = []
+        self._roundId = roundId
 
     def _setState(self, toState, fromState=None):
         if fromState is None:
@@ -38,6 +39,9 @@ class Round(object):
 
     def GetState(self):
         return self._state
+
+    def GetRoundId(self):
+        return self._roundId
 
     def GetPlayers(self):
         return [p for p in self._players]
@@ -70,20 +74,20 @@ class Round(object):
         if not player.GetName() == self._players[self._currentPlayer].GetName():
             return -106
 
-        if not self._gridManager.IsValidGrid(position):
+        if not self._gridContainer.IsValidGrid(position):
             return -107
 
         if str(action) == "OpenGrid":
-            score = self._gridManager.RevealGrid(position)
+            score = self._gridContainer.RevealGrid(position)
         elif str(action) == "SetFlagGrid":
-            score = self._gridManager.MarkGrid(position)
+            score = self._gridContainer.MarkGrid(position)
         else:
             return -108
 
         self._addPlayerScore(score)
         self._adjustPlayerSeq()
 
-        if self._gridManager.IsAllGridsClicked():
+        if self._gridContainer.IsAllGridsClicked():
             self._setState("End")
             self._winner = next(p for p in sorted([copy.copy(p) for p in self._players],
                                                   key=lambda p: p.GetScore(),
@@ -96,15 +100,19 @@ class Round(object):
         scoreMsg = [p[1] for p in sorted(self._scoreMsg.items(), key=lambda pair: pair[0])]
         winner = self._winner if self.GetState() == "End" else None
         return {
-            "Grids": None if self.GetState() == "Init" else self._gridManager.GetGrids().values(),
+            "Grids": None if self.GetState() == "Init" else self._gridContainer.GetGrids().values(),
             "Players": [p.Serialize() for p in self._players],
             "Current": None if self.GetState() != "Playing" else self._players[self._currentPlayer].Serialize(),
             "ScoreMsg": scoreMsg,
             "Width": self._width,
             "Height": self._height,
-            "Status": self.GetState(),
+            "State": self.GetState(),
             "Winner": winner,
-            "LastUpdateTime": self._lastUpdateTime
+            "LastUpdateTime": self._lastUpdateTime,
+            "PlayerCount": self._playerCount,
+            "ComputerCount": self._computerCount,
+            "MineCount": self._mineCount,
+            "RoundId": self.GetRoundId()
         }
 
     def Surrender(self, player):
@@ -127,6 +135,43 @@ class Round(object):
         self._lastUpdateTime = time.time()
         return 0
 
+    @staticmethod
+    def Restore(info, players):
+        if info is None or players is None:
+            return None
+
+        width = info["Width"]
+        height = info["Height"]
+        mineCount = info["MineCount"]
+        playerCount = info["PlayerCount"]
+        computerCount = info["ComputerCount"]
+
+        r = Round(width, height, mineCount, playerCount, computerCount)
+        r._players = players
+        r._winner = info["Winner"]
+        r._state = info["State"]
+        r._lastUpdateTime = info["LastUpdateTime"]
+
+        if len(info["ScoreMsg"]) > 0:
+            for i in range(len(info["ScoreMsg"])):
+                r._scoreMsg[i] = info["ScoreMsg"][i]
+
+        if r.GetState() != "Init":
+            r._gridContainer = GridContainer.Restore(width, height, mineCount, info["Grids"])
+
+        for p in [p for p in r._players]:
+            p.Deserialize(**next(pInfo for pInfo in info["Players"] if pInfo["Name"] == p.GetName()))
+
+            if p.IsComputer():
+                p.SetGridContainer(r._gridContainer)
+
+            if info["Current"] is not None and p.GetName() == info["Current"]["Name"]:
+                r._currentPlayer = r._players.index(p)
+        if r.GetState() == "Playing":
+            r._setupComputer()
+
+        return r
+
     def _addPlayerScore(self, score):
         player = self._players[self._currentPlayer]
         if score < 0:
@@ -143,7 +188,7 @@ class Round(object):
                 break
 
     def _startGame(self):
-        self._gridManager = GridContainer(self._width, self._height, self.MineCount)
+        self._gridContainer = GridContainer(self._width, self._height, self._mineCount)
         for player in self._players:
             player.ResetScore()
         self._currentPlayer = 0
@@ -157,7 +202,7 @@ class Round(object):
             gevent.sleep(1)
             if not self._players[self._currentPlayer].IsComputer():
                 continue
-            if self.GetState() == "End":
+            if self.GetState() != "Playing":
                 break
             computerInfo = self._players[self._currentPlayer]
             action, pos = computerInfo.ProcessAction()
@@ -168,10 +213,10 @@ class Round(object):
         if self._computerCount == 0:
             return
 
-        self._players = [p for p in self._players if not p.IsComputer()]
-
-        for c in range(self._computerCount):
-            self._players.append(Computer("Computer{}".format(str(c)), self._gridManager))
+        num = 0
+        while len([p for p in self._players if p.IsComputer()]) < self._computerCount:
+            self._players.append(Computer("Computer{}".format(str(num)), self._gridContainer))
+            num += 1
 
         if self._computerThread is None:
             self._computerThread = threading.Thread(target=self._computerRun)

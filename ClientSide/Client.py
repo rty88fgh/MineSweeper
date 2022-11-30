@@ -51,16 +51,18 @@ class Client(object):
             print "Rounds:"
             for info in roundsInfo:
                 players = info["Players"]
-                print "Round Id:{} Status:{} Players:{}".format(
+                print "Round Id:{} State:{} Players:{} PlayerCount:{} ComputerCount:{}".format(
                     info["RoundId"],
-                    info["Status"],
+                    info["State"],
                     "".join(
-                        [p["Name"] + "," if p["Name"] != players[len(players) - 1] else p["Name"] for p in players]))
+                        [p["Name"] + "," if p["Name"] != players[len(players) - 1] else p["Name"] for p in players]),
+                    info["PlayerCount"],
+                    info["ComputerCount"])
 
             menuAns = self._view.ConsoleMenu(["Create new game", "Join", "Left"])
             if menuAns == 0 and self._createGame():
                 break
-            elif menuAns == 1 and self._joinGame([i["RoundId"] for i in roundsInfo]):
+            elif menuAns == 1 and self._joinGame([int(i["RoundId"]) for i in roundsInfo]):
                 break
             elif menuAns == 2:
                 self._leftGame()
@@ -79,7 +81,7 @@ class Client(object):
                 gevent.sleep(1)
                 continue
             info = resp["Data"]
-            if info["Status"] == "Init":
+            if info["State"] == "Init":
                 gevent.sleep(1)
                 continue
 
@@ -211,7 +213,7 @@ class Client(object):
             # data for post, params for get
             resp = method(Client.ServerUrl + url, data=json.dumps(data), params=data, headers=headers)
             if len(resp.content) == 0:
-                print "Send service error. Status:{}".format(resp.status_code)
+                print "Send service error. State:{}".format(resp.status_code)
                 return None
             content = resp.json()
             code = content["Code"]

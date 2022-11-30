@@ -9,18 +9,19 @@ class FileDao(IDao):
         self._root = root
         self._extension = extension
 
-    def Insert(self, key, data, force=False):
-        path = os.path.join(self._root, key + "." + self._extension)
+    def Insert(self, data, **kwargs):
+        fileName = kwargs.get("FileName", "")
+        path = os.path.join(self._root, fileName + "." + self._extension)
 
-        if not force and os.path.exists(path):
-            print "{} is exists".format(key)
+        if os.path.exists(path):
+            print "{} is exists".format(fileName)
             return False
 
         fp = open(path, "w+")
         fp.write(json.dumps(data))
         return True
 
-    def FindAll(self, filterFunc=None):
+    def FindAll(self, filterFunc=None, **kwargs):
         result = []
         for path in os.listdir(self._root):
             data = json.load(open(path, "r"))
@@ -29,14 +30,24 @@ class FileDao(IDao):
 
         return result
 
-    def Find(self, key):
+    def Find(self, key, **kwargs):
         path = os.path.join(self._root, key + "." + self._extension)
         return json.load(open(path, "r")) if os.path.exists(path) else None
 
-    def Delete(self, key):
+    def Delete(self, key, **kwargs):
         path = os.path.join(self._root, key + "." + self._extension)
         if not os.path.exists(path):
             return False
 
         os.remove(path)
+        return True
+
+    def Update(self, key, data, **kwargs):
+        path = os.path.join(self._root, key + "." + self._extension)
+        path = os.path.join(self._root, key + "." + self._extension)
+        if not os.path.exists(path):
+            return False
+
+        fp = open(path, "w+")
+        fp.write(json.dumps(data))
         return True

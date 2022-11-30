@@ -2,19 +2,21 @@ from Player import Player
 
 
 class Computer(Player):
-    def __init__(self, name, gridManager):
+    def __init__(self, name, gridContainer=None):
         super(Computer, self).__init__(name, True)
-        self._gridManager = None
-        self._gridManager = gridManager
+        self.SetGridContainer(gridContainer)
+
+    def SetGridContainer(self, gridContainer):
+        self._gridContainer = gridContainer
 
     def ProcessAction(self):
         set_flag = []
         must_not_mine = []
         unknown_girds = []
-        grids = self._gridManager.GetGrids()
+        grids = self._gridContainer.GetGrids()
 
         for grid in grids.values():
-            adjacent_grids = self._gridManager.GetAdjacentGrids(grid)
+            adjacent_grids = self._gridContainer.GetAdjacentGrids(grid)
             isOpen = grid["IsOpen"]
             mineCount = grid["MineCount"]
             if isOpen:
@@ -54,7 +56,7 @@ class Computer(Player):
             have_mine_count_grid = [g for g in grids if g["IsOpen"] and g["MineCount"] > 0]
             probability_dict = {}
             for grid in have_mine_count_grid:
-                adjacent_grids = self._gridManager.GetAdjacentGrids(grid)
+                adjacent_grids = self._gridContainer.GetAdjacentGrids(grid)
                 not_clicked = [g for g in adjacent_grids if not g["IsOpen"]]
                 # all grids were clicked
                 if len(not_clicked) == 0:

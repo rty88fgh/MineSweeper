@@ -17,7 +17,11 @@ class AccountManager(object):
         info = self._decodeToken(token)
         if info is None:
             return None
-        return self._getPlayerInfoByName(info['Name'])
+        return self.GetPlayerInfoByName(info['Name'])
+
+    def GetPlayerInfoByName(self, name):
+        playerInfo = self._dao.FindAccount(name)
+        return None if playerInfo is None else Player(playerInfo["Name"])
 
     def IsValidToken(self, token):
         return self._decodeToken(token) is not None
@@ -29,7 +33,7 @@ class AccountManager(object):
         if not isSuccess:
             return -110, None
 
-        player = self._getPlayerInfoByName(name)
+        player = self.GetPlayerInfoByName(name)
         return 0, {"Token": self._encodeToken(player.GetName())}
 
     def OnCreate(self, **kwargs):
@@ -42,10 +46,6 @@ class AccountManager(object):
             return 0 if result else -109, None
         except:
             return -111, None
-
-    def _getPlayerInfoByName(self, name):
-        playerInfo = self._dao.FindAccount(name)
-        return None if playerInfo is None else Player(playerInfo["Name"])
 
     def _encodeToken(self, name):
         token = jwt.encode({
