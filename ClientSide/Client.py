@@ -1,4 +1,6 @@
 import json
+import Tkinter
+import tkMessageBox
 from hashlib import md5
 import gevent
 import requests
@@ -79,7 +81,10 @@ class Client(object):
             if resp is None:
                 print "Failed to get joined round. It will retry 1 sec..."
                 gevent.sleep(1)
-                continue
+                Tkinter.Tk().wm_withdraw()
+                tkMessageBox.showinfo("Error",
+                                      "Failed to get round info from service. Please restart game and join back")
+                break
             info = resp["Data"]
             if info["State"] == "Init":
                 gevent.sleep(1)

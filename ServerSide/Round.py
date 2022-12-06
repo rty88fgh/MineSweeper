@@ -9,7 +9,7 @@ from GridContainer import GridContainer
 class Round(object):
     STATE = ["Init", "Playing", "End"]
 
-    def __init__(self, width, height, mineCount, playerCount, computerCount, roundId):
+    def __init__(self, width, height, mineCount, playerCount, computerCount):
         self._computerThread = None
         self._players = []
         self._gridContainer = None
@@ -24,7 +24,6 @@ class Round(object):
         self._computerCount = computerCount
         self._winner = None
         self._surrenders = []
-        self._roundId = roundId
 
     def _setState(self, toState, fromState=None):
         if fromState is None:
@@ -39,9 +38,6 @@ class Round(object):
 
     def GetState(self):
         return self._state
-
-    def GetRoundId(self):
-        return self._roundId
 
     def GetPlayers(self):
         return [p for p in self._players]
@@ -111,8 +107,7 @@ class Round(object):
             "LastUpdateTime": self._lastUpdateTime,
             "PlayerCount": self._playerCount,
             "ComputerCount": self._computerCount,
-            "MineCount": self._mineCount,
-            "RoundId": self.GetRoundId()
+            "MineCount": self._mineCount
         }
 
     def Surrender(self, player):
@@ -134,43 +129,6 @@ class Round(object):
 
         self._lastUpdateTime = time.time()
         return 0
-
-    @staticmethod
-    def Restore(info, players):
-        if info is None or players is None:
-            return None
-
-        width = info["Width"]
-        height = info["Height"]
-        mineCount = info["MineCount"]
-        playerCount = info["PlayerCount"]
-        computerCount = info["ComputerCount"]
-
-        r = Round(width, height, mineCount, playerCount, computerCount)
-        r._players = players
-        r._winner = info["Winner"]
-        r._state = info["State"]
-        r._lastUpdateTime = info["LastUpdateTime"]
-
-        if len(info["ScoreMsg"]) > 0:
-            for i in range(len(info["ScoreMsg"])):
-                r._scoreMsg[i] = info["ScoreMsg"][i]
-
-        if r.GetState() != "Init":
-            r._gridContainer = GridContainer.Restore(width, height, mineCount, info["Grids"])
-
-        for p in [p for p in r._players]:
-            p.Deserialize(**next(pInfo for pInfo in info["Players"] if pInfo["Name"] == p.GetName()))
-
-            if p.IsComputer():
-                p.SetGridContainer(r._gridContainer)
-
-            if info["Current"] is not None and p.GetName() == info["Current"]["Name"]:
-                r._currentPlayer = r._players.index(p)
-        if r.GetState() == "Playing":
-            r._setupComputer()
-
-        return r
 
     def _addPlayerScore(self, score):
         player = self._players[self._currentPlayer]

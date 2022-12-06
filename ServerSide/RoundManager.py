@@ -1,8 +1,3 @@
-import json
-
-import redis
-
-from Computer import Computer
 from Round import Round
 from RoundDao import RoundDao
 
@@ -17,7 +12,6 @@ class RoundManager(object):
         self._accountManager = accountManager
         self._allRounds = {}
         self._dao = RoundDao()
-        self._redis = redis.Redis("localhost", 6379, decode_responses=True)
         namespace = "Round"
         registerFunc('Create', self.OnCreate, namespace=namespace)
         registerFunc('GetAllRound', self.OnGetAllRound, namespace=namespace)
@@ -27,7 +21,6 @@ class RoundManager(object):
         registerFunc('OpenGrid', self.OnProcessAction, namespace=namespace)
         registerFunc('SetFlagGrid', self.OnProcessAction, namespace=namespace)
         registerFunc('Surrender', self.OnSurrender, namespace=namespace)
-        self._restoreAllRound()
 
     def OnJoin(self, **kwargs):
         roundId = kwargs['RoundId']
@@ -44,7 +37,6 @@ class RoundManager(object):
         game = self._allRounds[roundId]
         code = game.Join(player)
 
-        self._saveRedis(game)
         return code, {"RoundId": roundId if code >= 0 else None}
 
     def OnLeave(self, **kwargs):
@@ -56,7 +48,6 @@ class RoundManager(object):
 
         code = game.Leave(player)
 
-        self._saveRedis(game)
         return code, None
 
     def OnGetAllRound(self, **kwargs):
@@ -96,8 +87,7 @@ class RoundManager(object):
         game.Join(player)
 
         self._allRounds[roundId] = game
-        self._saveRedis(game, roundId)
-        self._redis.set(RoundManager.NEXT_ROUND_ID, self._nextRoundId)
+        self._dao.LogRoundInfo(game.GetInfo(), roundId)
         return 0, {'RoundId': roundId}
 
     def OnProcessAction(self, **kwargs):
@@ -109,7 +99,12 @@ class RoundManager(object):
             return -104, None
         code = game.ProcessPlayerAction(player, action, position)
 
-        self._saveRedis(game)
+        self._dao.LogAction(player,
+                            next(key for key, value in self._allRounds.items() if value == game),
+                            action,
+                            position,
+                            game.GetInfo(),
+                            code)
         return code, None
 
     def OnGetRoundData(self, **kwargs):
@@ -128,32 +123,16 @@ class RoundManager(object):
         game = self._getRound(player)
         code = game.Surrender(player)
 
-        self._saveRedis(game)
+        self._dao.LogAction(player,
+                            next(key for key, value in self._allRounds.items() if value == game),
+                            "Surrender",
+                            None,
+                            game.GetInfo(),
+                            code)
         return code, None
 
     def _getRound(self, player):
         return next((r for r in self._allRounds.values()
                      if player.GetName() in [p.GetName() for p in r.GetPlayers()] and
                      r.GetState() != "End"), None)
-
-    def _restoreAllRound(self):
-        allRound = self._redis.hgetall(RoundManager.ALL_ROUND_KEY)
-        nextId = self._redis.get(RoundManager.NEXT_ROUND_ID)
-        self._nextRoundId = int(nextId) if nextId is not None else 0
-
-        for key, value in allRound.items():
-            players = []
-            info = json.loads(value)
-            for p in info["Players"]:
-                if p["IsComputer"]:
-                    players.append(Computer(p["Name"]))
-                else:
-                    players.append(self._accountManager.GetPlayerInfoByName(p["Name"]))
-            self._allRounds[int(key)] = Round.Restore(info, players)
-
-    def _saveRedis(self, game, roundId=None):
-        if roundId is None:
-            roundId = next((key for key, value in self._allRounds.items() if value == game))
-
-        self._redis.hset(RoundManager.ALL_ROUND_KEY, roundId, json.dumps(game.GetInfo()))
 
