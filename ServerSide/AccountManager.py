@@ -8,9 +8,8 @@ class AccountManager(object):
 
     def __init__(self, registerFunc):
         self._dao = AccountDao(6000)
-        namespace = "Account"
-        registerFunc('Login', self.OnLogin, useAuth=False, namespace=namespace)
-        registerFunc('Register', self.OnCreate, useAuth=False, namespace=namespace)
+        registerFunc('Login', self.OnLogin, useAuth=False)
+        registerFunc('Register', self.OnCreate, useAuth=False)
 
     def GetPlayerInfoByToken(self, token):
         name = self._getName(token)

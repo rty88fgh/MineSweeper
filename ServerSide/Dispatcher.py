@@ -10,7 +10,7 @@ class Dispatcher(object):
         self._apiInfo = {}
 
     def on_post(self, req, resp):
-        funcInfo = self._getApiInfo(req.path)
+        funcInfo = self._apiInfo.get(req.path, None)
 
         if funcInfo is None:
             resp.status = falcon.HTTP_NOT_FOUND
@@ -27,42 +27,27 @@ class Dispatcher(object):
                 resp.status = falcon.HTTP_UNAUTHORIZED
                 return
         self._accountManager.RefreshToken(token)
-        code, outParam = funcInfo['Callback'](Token=token,
-                                              Path=req.path,
-                                              **({} if req.media is None else req.media))
+        code, outParam = funcInfo['Func'](Token=token,
+                                          Path=req.path,
+                                          **({} if req.media is None else req.media))
 
         self._setRespMsg(resp, code, **({} if outParam is None else outParam))
 
     def SetAccountManager(self, accountManager):
         self._accountManager = accountManager
 
-    def Register(self, path, callback, useAuth=True, namespace=None):
-        url = ("/" + namespace if namespace is not None else "") + "/" + path
+    def Register(self, name, func, useAuth=True):
+        url = "/" + name
         if url in self._apiInfo.keys():
             print "{} has been register.".format(url)
             return False
 
         self.Api.add_route(url, self)
-        self._setApiInfo(path, namespace, {
-            'Callback': callback,
+        self._apiInfo[url] = {
+            'Func': func,
             'UseAuth': useAuth,
-        })
+        }
         return True
-
-    def _getApiInfo(self, url):
-        hierarchyPath = url.split('/')
-
-        path = "/" + hierarchyPath[len(hierarchyPath) - 1]
-        namespace = url.replace(path, "")
-
-        return self._apiInfo[namespace].get(path) if namespace in self._apiInfo else None
-
-    def _setApiInfo(self, path, namespace, data):
-        namespaceUrl = "/" + namespace
-        pathUrl = "/" + path
-        nsInfo = self._apiInfo.get(namespaceUrl if namespace is not None else "", {})
-        nsInfo[pathUrl] = data
-        self._apiInfo[namespaceUrl] = nsInfo
 
     def _setRespMsg(self, resp, code, **kwargs):
         resp.status = falcon.HTTP_OK

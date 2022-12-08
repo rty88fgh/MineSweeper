@@ -1,5 +1,7 @@
 import datetime
 
+import pymongo
+
 from DbDao import DbDao
 
 
@@ -10,9 +12,17 @@ class RoundDao(object):
 
     def LogRoundInfo(self, roundInfo, roundId):
         roundInfo["RoundId"] = roundId
-        return self._dao.Insert(roundInfo, collection="Round")
+        return self._dao.Insert(roundInfo)
 
-    def LogAction(self, player, roundId, action, position, roundInfo, code,**kwargs):
+    def GetLastRoundId(self):
+        return self._dao.Find({},
+                              sort=[("RoundId", -1)],
+                              projection={
+                                  "RoundId": True,
+                                  "_id": False,
+                              }).get("RoundId", None)
+
+    def LogAction(self, player, roundId, action, position, roundInfo, code, **kwargs):
         log = {
             "Name": player.GetName(),
             "RoundId": roundId,

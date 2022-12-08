@@ -2,21 +2,16 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7ed610b8-3041-45d3-af53-0c44495c7cbc" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/../ClientSide/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/DbDao.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/MineSweeper_ClientServer.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../.idea/workspace.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ClientSide/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ClientSide/.idea/ClientSide.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../ClientSide/.idea/ClientSide.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ClientSide/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../ClientSide/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ClientSide/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../ClientSide/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/ServerSide.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ServerSide.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ClientSide/Client.py" beforeDir="false" afterPath="$PROJECT_DIR$/../ClientSide/Client.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AccountDao.py" beforeDir="false" afterPath="$PROJECT_DIR$/AccountDao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/AccountManager.py" beforeDir="false" afterPath="$PROJECT_DIR$/AccountManager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/DbDao.py" beforeDir="false" afterPath="$PROJECT_DIR$/DbDao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dispatcher.py" beforeDir="false" afterPath="$PROJECT_DIR$/Dispatcher.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/FileDao.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/IDao.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoundDao.py" beforeDir="false" afterPath="$PROJECT_DIR$/RoundDao.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/RoundManager.py" beforeDir="false" afterPath="$PROJECT_DIR$/RoundManager.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,14 +32,14 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Programming/MineSweeper_ClientServerWithDb/ClientSide&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.idesettings.debugger.python&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "last_opened_file_path": "C:/Programming/MineSweeper_ClientServerWithDb/ServerSide",
+    "settings.editor.selected.configurable": "reference.idesettings.debugger.python"
   }
-}</component>
+}]]></component>
   <component name="PyDebuggerOptionsProvider">
     <option name="mySupportGeventDebugging" value="true" />
   </component>

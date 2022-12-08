@@ -15,10 +15,10 @@ class AccountDao(object):
             "Name": name,
             "Password": password
         }
-        return self._dao.Insert(name, data)
+        return self._dao.Insert(data)
 
     def FindAccount(self, name):
-        return self._dao.Find(name)
+        return self._dao.Find({"Name": name})
 
     def GetToken(self, name):
         return self._redis.get(name)

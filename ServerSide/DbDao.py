@@ -1,8 +1,7 @@
 from pymongo import MongoClient
-from IDao import IDao
 
 
-class DbDao(IDao):
+class DbDao(object):
 
     def __init__(self, database, collection):
         self._client = MongoClient("localhost", 27017, maxPoolSize=10)
@@ -10,28 +9,24 @@ class DbDao(IDao):
         self._collection = collection
 
     def Delete(self, key, **kwargs):
-        result = self._getDbCollection(**kwargs).delete_one(self._generateKey(key))
+        result = self._getDbCollection(**kwargs).delete_one(key)
         return result.deleted_count == 1
 
-    def Find(self, key, **kwargs):
-        return self._getDbCollection(**kwargs).find_one(self._generateKey(key))
+    def Find(self, key, sort=None, projection=None, **kwargs):
+        query = self._getDbCollection(**kwargs)
+        return query.find_one(key, sort=sort, projection=projection)
 
-    def FindAll(self, filterFunc=None, **kwargs):
-        filterObj = kwargs.get("filterObj", {})
-        result = self._getDbCollection(**kwargs).find(filterObj)
-        return result if filterFunc is None else [r for r in result if filterFunc(r)]
+    def FindAll(self, find, sort=None, projection=None, **kwargs):
+        query = self._getDbCollection(**kwargs)
+        return query.find(find, sort=sort, projection=projection)
 
     def Insert(self, data, **kwargs):
         return self._getDbCollection(**kwargs).insert_one(data).inserted_id is not None
 
-    def Update(self, key, data, **kwargs):
-        isReplace = kwargs.get("isReplace", False)
+    def Update(self, key, data, isReplace=False, **kwargs):
         updateData = data if isReplace else {"$set": data}
-        result = self._getDbCollection(**kwargs).update_one(self._generateKey(key), updateData)
+        result = self._getDbCollection(**kwargs).update_one(key, updateData)
         return result.modified_count > 0
-
-    def _generateKey(self, value):
-        return {} if value is None else {"Name": value}
 
     def _getDbCollection(self, **kwargs):
         return self._client[kwargs.get("db", self._db)][kwargs.get("collection", self._collection)]

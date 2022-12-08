@@ -12,15 +12,16 @@ class RoundManager(object):
         self._accountManager = accountManager
         self._allRounds = {}
         self._dao = RoundDao()
-        namespace = "Round"
-        registerFunc('Create', self.OnCreate, namespace=namespace)
-        registerFunc('GetAllRound', self.OnGetAllRound, namespace=namespace)
-        registerFunc('Join', self.OnJoin, namespace=namespace)
-        registerFunc('Leave', self.OnLeave, namespace=namespace)
-        registerFunc('GetRoundData', self.OnGetRoundData, namespace=namespace)
-        registerFunc('OpenGrid', self.OnProcessAction, namespace=namespace)
-        registerFunc('SetFlagGrid', self.OnProcessAction, namespace=namespace)
-        registerFunc('Surrender', self.OnSurrender, namespace=namespace)
+        registerFunc('Create', self.OnCreate)
+        registerFunc('GetAllRound', self.OnGetAllRound)
+        registerFunc('Join', self.OnJoin)
+        registerFunc('Leave', self.OnLeave)
+        registerFunc('GetRoundData', self.OnGetRoundData)
+        registerFunc('OpenGrid', self.OnProcessAction)
+        registerFunc('SetFlagGrid', self.OnProcessAction)
+        registerFunc('Surrender', self.OnSurrender)
+        maxRound = self._dao.GetLastRoundId()
+        self._nextRoundId = maxRound + 1 if maxRound is not None else 0
 
     def OnJoin(self, **kwargs):
         roundId = kwargs['RoundId']
@@ -135,4 +136,3 @@ class RoundManager(object):
         return next((r for r in self._allRounds.values()
                      if player.GetName() in [p.GetName() for p in r.GetPlayers()] and
                      r.GetState() != "End"), None)
-
